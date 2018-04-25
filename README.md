@@ -14,4 +14,9 @@
 **RTP：Audio and video for the Internet.pdf**，这本书比较全面的介绍RTP/RTCP协议在互联网中的应用，通过对关键章节的翻译，逐步深入理解RTP/RTCP协议。
 ## 1.1.1 英文自译
 原文: [RTP/RTCP for internet](https://github.com/runner365/read_book/blob/master/RTP_RTCP/RTP%EF%BC%9AAudio%20and%20video%20for%20the%20Internet.pdf)<br>
-自译: [RTP/RTCP for internet精选翻译](https://github.com/runner365/read_book/wiki/RTP%EF%BC%9AAudio-and-video-for-the-Internet---%E7%B2%BE%E9%80%89%E8%87%AA%E8%AF%91)<br/>
+自译: [RTP/RTCP for internet精选翻译](https://github.com/runner365/read_book/blob/master/RTP_RTCP/RTP_RTCP%20for%20internet%E7%B2%BE%E9%80%89%E8%87%AA%E8%AF%91.md)<br/>
+自译关键内容:
++ RTCP报文介绍: SR, RR, BYE, APP
++ JITTER计算方式
++ RTT计算方式
++ RTP纠错方式: NACK
