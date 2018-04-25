@@ -16,9 +16,10 @@
 原文: [RTP/RTCP for internet](https://github.com/runner365/read_book/blob/master/RTP_RTCP/RTP%EF%BC%9AAudio%20and%20video%20for%20the%20Internet.pdf)<br>
 自译: [RTP/RTCP for internet精选翻译](https://github.com/runner365/read_book/blob/master/RTP_RTCP/RTP_RTCP%20for%20internet%E7%B2%BE%E9%80%89%E8%87%AA%E8%AF%91.md)<br/>
 自译关键内容:
-+ RTCP报文介绍: SR, RR, BYE, APP
-+ JITTER计算方式
-+ RTT计算方式
-+ RTP纠错方式: NACK
+* RTCP报文介绍: SR, RR, BYE, APP
+* JITTER计算方式
+* RTT计算方式
+* RTP纠错方式: NACK
 
-正在进行: RTP纠错方式FEC(前向纠错)
+下一步翻译: 
+* RTP纠错方式FEC(前向纠错)
