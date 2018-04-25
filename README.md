@@ -20,3 +20,5 @@
 + JITTER计算方式
 + RTT计算方式
 + RTP纠错方式: NACK
+
+正在进行: RTP纠错方式FEC(前向纠错)
