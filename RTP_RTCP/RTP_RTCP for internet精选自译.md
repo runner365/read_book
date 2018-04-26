@@ -161,7 +161,7 @@ A XOR B OXR B = A
 * Mask. 这个是bit mask，表示在sequence number base只有有哪些报文是在FEC保护中。如果bit i被设置成1，就是说 sequence number N+i已经被计算在FEC报文中，属于被保护对象了，这里的N就是sequence number base。最小i=0，最大i=23，也就是说FEC最大能一次保护24个RTP报文，这些报文可以是不连续的。
 * Timestamp recovery. 该字段是原始报文的timestamp XOR结果。
 
-&emsp;&emsp;FEC payload data 是 CSRC list(如果存在)，header extension(如果存在) 和 源RTP报文payload data的XOR结果。如果一组RTP报文的数据长度都各不相同，最小的那个RTP报文就用pad来填充到最大那个RTP报文的长度(这个padding bits具体内容并不重要，只要每次保持用一样的值就可以了，通常使用0bits就可以了)。
+&emsp;&emsp;FEC payload data 是 CSRC list(如果存在)，header extension(如果存在) 和 源RTP报文payload data的XOR结果。如果一组RTP报文的数据长度都各不相同，最小的那个RTP报文就用pad来填充到最大那个RTP报文的长度(这个padding bits具体内容并不重要，只要每次保持用一样的值就可以了，通常使用0值就可以了)。
 
 ## 9.3 纠错重传
 &emsp;&emsp;如果接受者向发送者发送消息，索要丢失的报文，丢失的报文就能避免。对于纠错机制来说，重传是常规的方法，它能在各种场景中应用。当然重传也有其应用的局限性。重传并不是RTP标准协议的一部分；但是，RTP配套的文档也在发展中，它应用基于RTCP的框架来发送重传请求和其他的即时反馈机制。<br/>
