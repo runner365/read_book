@@ -138,6 +138,17 @@ A XOR B XOR C = (A XOR B) XOR C = A XOR (B XOR C)
 A XOR B OXR B = A 
 </pre>
 &emsp;&emsp;对于所有类型bit值，如果我们分别发送3个值：A, B 和 A X0R B，这3个报文只要收到其中两个，另外一个都能被恢复。图9.1显示7为bit的修复过程，当然其实能对任意长度的bit流进行修复。这个过程会被直接应用到RTP报文中，就是把整个RTP报文当做一组bit流，然后计算几个RTP报文的XOR结果，这个XOR结果就能用作丢失恢复。<br/>
+![Parity_error](https://github.com/runner365/read_book/blob/master/RTP_RTCP/pic/Parity_revover.png)<br/>
+&emsp;&emsp;RTP的对等FEC标准在RFC2733。这个RFC标准内容是定义RTP报文总体FEC方案，满足所有类型的负载类型payload type，并且后向兼容那些不处理FFEC报文的接受者。FEC报文是通过源RTP报文计算得到的。这些FEC报文作为独立的RTP报文来发送，FEC报文能用来修复源报文的丢失，如图9.2。<br/>
+![Parity_FEC_Repair](https://github.com/runner365/read_book/blob/master/RTP_RTCP/pic/Parity_FEC_Repair.png)<br/>
+### 9.1.2 对等FEC报文格式
+&emsp;&emsp;FEC报文格式如图9.3，主要又3部分:<br/>
+* 标准RTP头
+* FEC负载头
+* 负载数据本身
+<br/>
+&emsp;&emsp;FEC报文是通过被保护的RTP报文组进行计算产生的，RTP报文计算内容是算上rtp header extension相关信息的。也就是对所有的RTP报文对应内容进行XOR计算，结果保存在FEC中。<br/>
+![FEC_Packet_Format](https://github.com/runner365/read_book/blob/master/RTP_RTCP/pic/FEC_Packet_Format.png)<br/>
 
 ## 9.3 纠错重传
 &emsp;&emsp;如果接受者向发送者发送消息，索要丢失的报文，丢失的报文就能避免。对于纠错机制来说，重传是常规的方法，它能在各种场景中应用。当然重传也有其应用的局限性。重传并不是RTP标准协议的一部分；但是，RTP配套的文档也在发展中，它应用基于RTCP的框架来发送重传请求和其他的即时反馈机制。<br/>
