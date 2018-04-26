@@ -152,14 +152,14 @@ A XOR B OXR B = A
 &emsp;&emsp;RTP头的字段具体如下：<br>
 * version, playload type, sequence number 和timestamp和普通的RTP报文方式一样。payload type可以基于RTP规程动态定义；sequence对每个FEC报文进行自增;timestamp是要保护RTP报文的时间戳时钟，具体数值是记录FEC的时刻。(FEC的timestamp不一定等于媒体RTP的timestamp)。也就是说，FEC报文的时间戳单独自增，完全独立。
 * padding，extension，CC和marker bits这4个字段，是通过对原始报文对应字段进行XOR计算得到。如果原始报文丢失，这些原始报文中的字段就能被恢复。
-* CSRC列表和header extension不在FEC头中，CC和X字段完全独立。如果csrc列表和header extension在源RTP报文中，这些内容会被包含在FEC报文的payload负载内容中(就是在FEC payload header后)
+* CSRC列表和header extension不在FEC头中，CC和X字段完全独立。如果csrc列表和header extension在源RTP报文中，这些内容会被包含在FEC报文的payload负载内容中(就是在FEC payload header后)<br/>
 
 &emsp;&emsp;FEC payload header保护源RTP头字段，这些字段没有在FEC报文的RTP header中出现，具体有这6个字段:<br/>
 * sequence number base. 被保护RTP报文组最小的sequence number
 * Length recovery. 原始RTP负载报文组各自长度的XOR结果。各自的长度是指payload数据，csrc列表，header extension，和padding。当不知道丢失报文的payload长度是，通过FEC计算就可以得出。
 * Extension(E). 表示FEC头中是否有额外的字段。通常该字段设置为0，表示没有额外字段(ULP格式，在本章后面介绍，用extension字段表示多层FEC)
 * Mask. 这个是bit mask，表示在sequence number base只有有哪些报文是在FEC保护中。如果bit i被设置成1，就是说 sequence number N+i已经被计算在FEC报文中，属于被保护对象了，这里的N就是sequence number base。最小i=0，最大i=23，也就是说FEC最大能一次保护24个RTP报文，这些报文可以是不连续的。
-* Timestamp recovery. 该字段是原始报文的timestamp XOR结果。
+* Timestamp recovery. 该字段是原始报文的timestamp XOR结果。<br/>
 
 &emsp;&emsp;FEC payload data 是 CSRC list(如果存在)，header extension(如果存在) 和 源RTP报文payload data的XOR结果。如果一组RTP报文的数据长度都各不相同，最小的那个RTP报文就用pad来填充到最大那个RTP报文的长度(这个padding bits具体内容并不重要，只要每次保持用一样的值就可以了，通常使用0值就可以了)。
 
