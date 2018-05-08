@@ -25,7 +25,20 @@ webrtc的主要内容:<br/>
 * RTT计算方式
 
 ### 1.1.1.2 RTP纠错方式
-自译文档连接:[RTP纠错方式](https://github.com/runner365/read_book/blob/master/RTP_RTCP/RTP%E7%BA%A0%E9%94%99%E6%9C%BA%E5%88%B6--%E7%B2%BE%E9%80%89%E8%87%AA%E8%AF%91.md)<br/>
+自译文档链接:[RTP纠错方式](https://github.com/runner365/read_book/blob/master/RTP_RTCP/RTP%E7%BA%A0%E9%94%99%E6%9C%BA%E5%88%B6--%E7%B2%BE%E9%80%89%E8%87%AA%E8%AF%91.md)<br/>
 自译关键内容:
 * RTP纠错方式: NACK
 * RTP纠错方式:FEC(前向纠错)
+
+## 1.2 RTP H264
+**RFC6184是RFC描述RTP协议如何承载H264**<br/>
+## 1.2.1 英文自译
+原文:[RFC6184.pdf](https://github.com/runner365/read_book/blob/master/RTP_H264/rfc6184.pdf)<br/>
+自译文档链接:[翻译: rfc6184-RTP Payload Format for H.264 Video](https://github.com/runner365/read_book/blob/master/RTP_H264/rfc6184%E8%87%AA%E8%AF%91.md)<br/>
+翻译主要内容:<br/>
+* RTP承载H264的主要几种方式
+* single NAL unit mode(单NAL单元模式)
+* STAP-A方式(同一时间和顺序的聚合模式)
+* FU-A(同一时间和顺序的分片模式)
+
+对于STAP-B，MTAP，FU-B等，因为当前没有应用场景，在实际工作中用不到，因此不进行翻译。<br/>
