@@ -32,6 +32,8 @@ webrtc的主要内容:<br/>
 
 ## 1.2 RTP H264
 **RFC6184是RFC描述RTP协议如何承载H264**<br/>
+对于视频，主要承载的就是H264报文，rfc6184就显得非常的核心和重要。
+
 ## 1.2.1 英文自译
 原文:[RFC6184.pdf](https://github.com/runner365/read_book/blob/master/RTP_H264/rfc6184.pdf)<br/>
 自译文档链接:[翻译: rfc6184-RTP Payload Format for H.264 Video](https://github.com/runner365/read_book/blob/master/RTP_H264/rfc6184%E8%87%AA%E8%AF%91.md)<br/>
