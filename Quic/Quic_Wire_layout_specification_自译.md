@@ -29,7 +29,7 @@
 对认证和加密不太熟悉，本节跳过。
 
 ## 连接迁移
-&emsp;&emsp;TCP的连接由4元组定义: 源IP，源port，目的IP，目的port。TCP最著名的问题就是连接无法容忍IP地址变化(举例，WIFI迁移到移动网络)或者端口的变化(如当客户端的NAT绑定过去造成端口的变化)。当MPTCP导致TCP连接迁移，有个很大的困扰就是缺少中间件支持和缺少OS操作系统级别的支持。<br/>
+&emsp;&emsp;TCP的连接由4元组定义: 源IP，源port，目的IP，目的port。TCP最著名的问题就是连接无法容忍IP地址变化(举例，WIFI迁移到移动网络)或者端口的变化(如当客户端的NAT绑定超时造成端口的变化)。当MPTCP导致TCP连接迁移，有个很大的困扰就是缺少中间件支持和缺少OS操作系统级别的支持。<br/>
 &emsp;&emsp;QUIC连接由64bits的connectID定义，有客户端生成个随机数。QUIC能继续连接，即使IP变化或NAT重绑定发生，只要在迁移过程中connectID保持不变。QUIC也提供了自动的加密认证的客户端变化方式，因为迁移的客户端会继续用同一个会话key来进行加密和认证。<br/>
 &emsp;&emsp;在某些特定场景中，如果连接可以被IP4元组唯一定义，且该4元组不会变化，可以选择不包含connectID进行连接。
 
@@ -91,3 +91,27 @@
 +--------+--------+--------+--------+--------+--------+
 </pre>
 <br/>
+&emsp;&emsp;负载会包含类型独立的头部字节，描述如下。<br/>
+&emsp;&emsp;公共头字段如下:<br/>
+* Public Flags<br/>
+&emsp;&emsp;* 0x01 = PUBLIC_FLAG_VERSION. 这个flag的含义在于报文由服务器还是客户端发出。当报文由客户端发出，设置改bit意味着头部包含有QUIC version(如下)。客户端必须设置该bit，直到服务端返回运行的version。服务端同意客户端的version，但服务端发送的报文中并不设置该标志位。如果服务端发送的报文设置该bit，意味该报文是version协商报文。version的协商将在后面进行讨论。<br/>
+&emsp;&emsp;* 0x02 = PUBLIC_FLAG_RESET. 该bit位表示Public Reset packet报文。<br/>
+&emsp;&emsp;* 0x04 表示在头部有32字节的多元化标志。<br/>
+&emsp;&emsp;* 0x08 表示报文有全8字节的connect ID。该bit必须在所有报文中设置，直到有不同的值产生(举例，客户端可能需要connect id更少的字节)<br/>
+&emsp;&emsp;* 0x30 这两个字节的占位表示packet number需要字节的数量。这两个bit仅仅正对数据报文。对于public reset和version negotiation报文(服务端发送的)，这两个字节的占位设置为0。<br/>
+&emsp;&emsp;&emsp;&emsp;* 0x30 表示packet number字段有6个字节的长度<br/>
+&emsp;&emsp;&emsp;&emsp;* 0x20 表示packet number字段有4个字节的长度<br/>
+&emsp;&emsp;&emsp;&emsp;* 0x10 表示packet number字段有2个字节的长度<br/>
+&emsp;&emsp;&emsp;&emsp;* 0x00 表示packet number字段有1个字节的长度<br/>
+&emsp;&emsp;* 0x40 保留为多路径用途<br/>
+&emsp;&emsp;* 0x80 未使用，必须设置为0
+
+* Connection ID: <br/>
+&emsp;&emsp;这个是客户端生成的64位bit的随机数，标识连接的唯一性。因为QUIC的连接设计初衷是即使客户端IP迁移，连接也不中断，IP4元组(源IP，源port，目的IP，目的port)并不需要去确定连接的唯一性。如果对于某个传输的方向，IP4元组能代表连接的唯一性(其实就是不可能发生IP迁移等)，connect ID字段也就不需要了。
+
+* QUIC Version: <br/>
+&emsp;&emsp;32位表示QUIC协议的版本。该字段仅仅当public flag设置了FLAG_VERSION后才有(i.e public_flags & FLAG_VERSION !=0)。客户端设置这个flag后，且必须包含一个客户端推荐的quic version，包含任意数据(符合这个版本的)。服务器设置这个flag，仅当客户端推荐的quic version不支持，服务端返回一个列表包含可接受的quic version，但是不必后续带有数据。版本字段例子，"Q025"版本，"Q"在第9个字节，"0"在第10个字节，依次类推。(文档后有版本列表)
+
+* Packet Number: <br/>
+&emsp;&emsp;
+
