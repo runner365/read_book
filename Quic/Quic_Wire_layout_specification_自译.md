@@ -31,11 +31,11 @@
 ## 连接迁移
 &emsp;&emsp;TCP的连接由4元组定义: 源IP，源port，目的IP，目的port。TCP最著名的问题就是连接无法容忍IP地址变化(举例，WIFI迁移到移动网络)或者端口的变化(如当客户端的NAT绑定超时造成端口的变化)。当MPTCP导致TCP连接迁移，有个很大的困扰就是缺少中间件支持和缺少OS操作系统级别的支持。<br/>
 &emsp;&emsp;QUIC连接由64bits的connectID定义，有客户端生成个随机数。QUIC能继续连接，即使IP变化或NAT重绑定发生，只要在迁移过程中connectID保持不变。QUIC也提供了自动的加密认证的客户端变化方式，因为迁移的客户端会继续用同一个会话key来进行加密和认证。<br/>
-&emsp;&emsp;在某些特定场景中，如果连接可以被IP4元组唯一定义，且该4元组不会变化，可以选择不包含connectID进行连接。
+&emsp;&emsp;在某些特定场景中，如果连接可以被IP4元组唯一定义，且该4元组不会变化，可以选择不包含connectID进行连接。<br/>
 
 # 包类型和格式
-&emsp;&emsp;QUIC有特殊包(Special Packets)和常规包(Regular Packets)。
-&emsp;&emsp;有两种特殊包(Special Packets):
+&emsp;&emsp;QUIC有特殊包(Special Packets)和常规包(Regular Packets)。<br/>
+&emsp;&emsp;有两种特殊包(Special Packets):<br/>
 * 版本协商报文(Version Negotiation Packets)
 * public重置报文(Public Reset Packets)
 
