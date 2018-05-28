@@ -222,5 +222,3 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 &emsp;&emsp;如果一方收到一个stream包但并不想接收它，它可以立即返回一个RST_STREAM报文(下面会介绍)。注意，虽然发起方已经在该stream中发送数据，但这些数据会被丢弃。<br/>
 &emsp;&emsp;一旦流被创建，它就能发送和接收数据。也就是说直到流在某方向结束前，这条流上的报文都能持续的被发送。<br/>
 &emsp;&emsp;每个QUIC端都能正常终结stream。有3中终结stream的方法:
-
-Either QUIC endpoint can terminate a stream normally. There are three ways that streams can be terminated:
