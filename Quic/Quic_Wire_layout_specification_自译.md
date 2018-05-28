@@ -98,7 +98,7 @@
 &emsp;&emsp;* 0x02 = PUBLIC_FLAG_RESET. 该bit位表示Public Reset packet报文。<br/>
 &emsp;&emsp;* 0x04 表示在头部有32字节的多元化标志。<br/>
 &emsp;&emsp;* 0x08 表示报文有全8字节的connect ID。该bit必须在所有报文中设置，直到有不同的值产生(举例，客户端可能需要connect id更少的字节)<br/>
-&emsp;&emsp;* 0x30 这两个字节的占位表示packet number需要字节的数量。这两个bit仅仅正对数据报文。对于public reset和version negotiation报文(服务端发送的)，这两个字节的占位设置为0。<br/>
+&emsp;&emsp;* 0x30 这两个字节的占位表示packet number需要字节的数量。这两个bit仅仅正对数据报文。对于public reset和version negotiation报文(服务端发送的)，这两个字节的占位设置为0。<br/>
 &emsp;&emsp;&emsp;&emsp;* 0x30 表示packet number字段有6个字节的长度<br/>
 &emsp;&emsp;&emsp;&emsp;* 0x20 表示packet number字段有4个字节的长度<br/>
 &emsp;&emsp;&emsp;&emsp;* 0x10 表示packet number字段有2个字节的长度<br/>
@@ -107,11 +107,43 @@
 &emsp;&emsp;* 0x80 未使用，必须设置为0
 
 * Connection ID: <br/>
-&emsp;&emsp;这个是客户端生成的64位bit的随机数，标识连接的唯一性。因为QUIC的连接设计初衷是即使客户端IP迁移，连接也不中断，IP4元组(源IP，源port，目的IP，目的port)并不需要去确定连接的唯一性。如果对于某个传输的方向，IP4元组能代表连接的唯一性(其实就是不可能发生IP迁移等)，connect ID字段也就不需要了。
+&emsp;&emsp;这个是客户端生成的64位bit的随机数，标识连接的唯一性。因为QUIC的连接设计初衷是即使客户端IP迁移，连接也不中断，IP4元组(源IP，源port，目的IP，目的port)并不需要去确定连接的唯一性。如果对于某个传输的方向，IP4元组能代表连接的唯一性(其实就是不可能发生IP迁移等)，connect ID字段也就不需要了。
 
 * QUIC Version: <br/>
-&emsp;&emsp;32位表示QUIC协议的版本。该字段仅仅当public flag设置了FLAG_VERSION后才有(i.e public_flags & FLAG_VERSION !=0)。客户端设置这个flag后，且必须包含一个客户端推荐的quic version，包含任意数据(符合这个版本的)。服务器设置这个flag，仅当客户端推荐的quic version不支持，服务端返回一个列表包含可接受的quic version，但是不必后续带有数据。版本字段例子，"Q025"版本，"Q"在第9个字节，"0"在第10个字节，依次类推。(文档后有版本列表)
+&emsp;&emsp;32位表示QUIC协议的版本。该字段仅仅当public flag设置了FLAG_VERSION后才有(i.e public_flags & FLAG_VERSION !=0)。客户端设置这个flag后，且必须包含一个客户端推荐的quic version，包含任意数据(符合这个版本的)。服务器设置这个flag，仅当客户端推荐的quic version不支持，服务端返回一个列表包含可接受的quic version，但是不必后续带有数据。版本字段例子，"Q025"版本，"Q"在第9个字节，"0"在第10个字节，依次类推。(文档后有版本列表)
 
 * Packet Number: <br/>
-&emsp;&emsp;
+&emsp;&emsp;packet number的长度基于FLAG_BYTE_SEQUENCE_NUMBER的flag设置在public flag。每一个常规报文regular packet(也就是非public reset和version negotiation报文)都需要被发送方设置packet number。第一个被发送的报文的packet number应该设置成1，后续的报文的packet number应该+1递增。<br/>
+&emsp;&emsp;packet number的64位被放在加密的内容中；因此，QUIC的一方不能发送报文，其packet number不在64bits内。如果QUIC的一方发送的packet number是2^64-1，报文产生CONNECTION_CLOSE报文，错误码是QUIC_SEQUENCE_NUMBER_LIMIT_REACHED，并且不会再发送其他的报文。<br/>
+&emsp;&emsp;大部分情况packet number的48bits长度的传输，为了接收端能清晰的对packet number进行组包，QUIC发送端不应该发送packet number大于2^(bitlength-2)。因此48bits长度的packet number不应该大于(2^46)。<br/>
+&emsp;&emsp;人也被截断的packet number都应该被推断为最接近已经收到最大packet number，其包含这个截断的packet number。这个packet number的传输比例与推断中的地位bits对应。<br/>
+&emsp;&emsp;Public Flag的处理流程如下: <br/>
+<pre>
+--- src
+Check the public flags in public header
+                 |
+                 |
+                 V
+           +--------------+
+           | Public Reset |    YES
+           | flag set?    |---------------> Public Reset Packet
+           +--------------+
+                 |
+                 | NO
+                 V
+           +------------+          +-------------+
+           | Version    |   YES    | Packet sent |  YES
+           | flag set?  |--------->| by server?  |--------> Version Negotiation
+           +------------+          +-------------+               Packet
+                 |                        |
+                 | NO                     | NO
+                 V                        V
+           Regular Packet         Regular Packet with 
+                              QUIC Version present in header
+---
+
+</pre>
+
+
+
 
