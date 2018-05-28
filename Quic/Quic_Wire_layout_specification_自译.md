@@ -203,8 +203,8 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 &emsp;&emsp;QUIC客户端是一方发起连接的。QUIC的连接由version协商和加密、传输握手混合进行，以此降低连接的延时。我们下面先介绍version协商。<br/>
 &emsp;&emsp;每个客户端发向服务端的初始化报文必须设置version flag，必须定义将要使用version。每个客户端发送的报文都不许带version flag，直到收到服务端返回一个不带version flag的报文。在服务端收到客户端第一个不带version flag的报文后，服务端就必须丢弃所有再收到version flag的报文。<br/>
 &emsp;&emsp;当服务端收到一个新的connect ID，它将比较客户端的版本自己是否支持。如果客户端的版本自己自持，服务端将在整个连接周期内用该版本。然后，所有服务端的发送报文都应该清除version flag该标志位。<br/>
-&emsp;&emsp;如果客户端的版本不被服务器接收，1个RTT的延时就会触发。服务端将发送Version协商报文给客户端。这个报文的version flag会被设置，并且会包含服务端支持的version列表。<br/>
-&emsp;&emsp;当客户端收到version协商报文，会选择其中一个version并用这个version重发所有报文。这些报文必须也设置version flag和包含该version。最终，客户端接收到从服务器来的第一个常规报文开始，表示version协商的结束，客户端之后发送的所有报文都应该去使能version flag。<br/>
+&emsp;&emsp;如果客户端的版本不被服务器接收，1个RTT的延时就会触发。服务端将发送Version协商报文给客户端。这个报文的version flag会被设置，并且会包含服务端支持的version列表。<br/>
+&emsp;&emsp;当客户端收到version协商报文，会选择其中一个version并用这个version重发所有报文。这些报文必须也设置version flag和包含该version。最终，客户端接收到从服务器来的第一个常规报文开始，表示version协商的结束，客户端之后发送的所有报文都应该去使能version flag。<br/>
 &emsp;&emsp;为了避免downgrade攻击，客户端定义在第一个报文的version和服务器支持的version列表都必须包含在加密的handleshake数据中。客户端需要确认在handshake中的version列表和version协商列表进行对比，得到相同一致的。服务端需要确认客户端发来的handshake中的version是否实际支持。<br/>
 &emsp;&emsp;连接建立的后续部分将在handshake文档中介绍[QUIC-CRYPTO]。加密的handshake被分配固定的stream ID 1。<br/>
 &emsp;&emsp;在连接建立过程中，handshake必须协商各种传输参数。当前已经定义的传输参数再本文后面有介绍。<br/>
@@ -215,7 +215,7 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 &emsp;&emsp;本节概念上对一个QUIC连接中数据传输中流的使用进行介绍。各个各样的报文会在Frame Type and Formats节进行介绍。<br/>
 
 ### QUIC流的生命周期(Life of a QUIC Stream)
-&emsp;&emsp;QUIC流是双向发送的数据被分配到流分配包中的很多独立序列。stream能被客户单或服务器创建，能与其他的流一起并发发送数据，并且能停止发送。QUIC流的生命周期模型与HTTP/2的非常相似。[RFC7540]
+&emsp;&emsp;QUIC流是双向发送的数据被分配到流分配包中的很多独立序列。stream能被客户单或服务器创建，能与其他的流一起并发发送数据，并且能停止发送。QUIC流的生命周期模型与HTTP/2的非常相似。[RFC7540]
 (QUIC流的HTTP/2用法在本问题后面进行详细描述)<br/>
-&emsp;&emsp;针对指定流发送一个流报文，就隐形的创建一个stream。为了避免stream ID冲突，如果是服务端发起stream的话，stream-ID必须是偶数;客户端发起stream的话，stream-ID必须是单数。0不是一个有效的stream-ID。Stream 1给加密的handshake作为第一个客户端端发起stream使用。当应用HTTP/2 over QUI时，Stream 3为发送所有其他流的压缩头使用，从而确保可靠有序的发送和头部处理。<br/>
+&emsp;&emsp;针对指定流发送一个流报文，就隐形的创建一个stream。为了避免stream ID冲突，如果是服务端发起stream的话，stream-ID必须是偶数;客户端发起stream的话，stream-ID必须是单数。0不是一个有效的stream-ID。Stream 1给加密的handshake作为第一个客户端端发起stream使用。当应用HTTP/2 over QUI时，Stream 3为发送所有其他流的压缩头使用，从而确保可靠有序的发送和头部处理。<br/>
 &emsp;&emsp;当新流被创建时，连接双方的stream ID应该连续的增长。举例，Stream2应该在Stream 3后创建(stream 3是客户端，stream2是服务端)，但是stream 7肯定不能再stream 9后才创建。对端可能接受的流是无序的。举例，如果在服务端接受packet9包含stream7前，接受到packet10包含stream9，服务器必须能从容处理这样的乱序情况。<br/>
