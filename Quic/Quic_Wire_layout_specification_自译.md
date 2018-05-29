@@ -110,13 +110,13 @@
 &emsp;&emsp;这个是客户端生成的64位bit的随机数，标识连接的唯一性。因为QUIC的连接设计初衷是即使客户端IP迁移，连接也不中断，IP4元组(源IP，源port，目的IP，目的port)并不需要去确定连接的唯一性。如果对于某个传输的方向，IP4元组能代表连接的唯一性(其实就是不可能发生IP迁移等)，connect ID字段也就不需要了。
 
 * QUIC Version: <br/>
-&emsp;&emsp;32位表示QUIC协议的版本。该字段仅仅当public flag设置了FLAG_VERSION后才有(i.e public_flags & FLAG_VERSION !=0)。客户端设置这个flag后，且必须包含一个客户端推荐的quic version，包含任意数据(符合这个版本的)。服务器设置这个flag，仅当客户端推荐的quic version不支持，服务端返回一个列表包含可接受的quic version，但是不必后续带有数据。版本字段例子，"Q025"版本，"Q"在第9个字节，"0"在第10个字节，依次类推。(文档后有版本列表)
+&emsp;&emsp;32位表示QUIC协议的版本。该字段仅仅当public flag设置了FLAG_VERSION后才有(i.e public_flags & FLAG_VERSION !=0)。客户端设置这个flag后，且必须包含一个客户端推荐的quic version，包含任意数据(符合这个版本的)。服务器设置这个flag，仅当客户端推荐的quic version不支持，服务端返回一个列表包含可接受的quic version，但是不必后续带有数据。版本字段例子，"Q025"版本，"Q"在第9个字节，"0"在第10个字节，依次类推。(文档后有版本列表)
 
 * Packet Number: <br/>
 &emsp;&emsp;packet number的长度基于FLAG_BYTE_SEQUENCE_NUMBER的flag设置在public flag。每一个常规报文regular packet(也就是非public reset和version negotiation报文)都需要被发送方设置packet number。第一个被发送的报文的packet number应该设置成1，后续的报文的packet number应该+1递增。<br/>
 &emsp;&emsp;packet number的64位被放在加密的内容中；因此，QUIC的一方不能发送报文，其packet number不在64bits内。如果QUIC的一方发送的packet number是2^64-1，报文产生CONNECTION_CLOSE报文，错误码是QUIC_SEQUENCE_NUMBER_LIMIT_REACHED，并且不会再发送其他的报文。<br/>
 &emsp;&emsp;大部分情况packet number的48bits长度的传输，为了接收端能清晰的对packet number进行组包，QUIC发送端不应该发送packet number大于2^(bitlength-2)。因此48bits长度的packet number不应该大于(2^46)。<br/>
-&emsp;&emsp;人也被截断的packet number都应该被推断为最接近已经收到最大packet number，其包含这个截断的packet number。这个packet number的传输比例与推断中的地位bits对应。<br/>
+&emsp;&emsp;任何被截断的packet number都应该被推断为最接近已经收到最大packet number，其包含这个截断的packet number。这个packet number的传输比例与推断中的地位bits对应。<br/>
 &emsp;&emsp;Public Flag的处理流程如下: <br/>
 <pre>
 --- src
@@ -145,6 +145,7 @@ Check the public flags in public header
 </pre><br/>
 
 ## Special Packets
+
 ### Version Negotiation Packet
 &emsp;&emsp;version协商报文仅仅由服务端发送。version协商报文由8bit的public flag和64bit的connect ID。public flag必须设置PUBLIC_FLAG_VERSION，和64位bit的connect ID。报文后续是一个服务器支持version的信息列表，列表每项是4byte的version字段:<br/>
 <pre>
@@ -181,14 +182,17 @@ Check the public flags in public header
 +--------+--------+--------+--------+--------+--------+---
 ---
 </pre>
-Tag value map: 这个Tag value map有一下tar-values信息:
+<br/>
+
+Tag value map: 这个Tag value map有一下tar-values信息:<br/>
 * RNON (public reset nonce proof) - a 64-bit unsigned integer. Mandatory.
 * RSEQ (rejected packet number) - a 64-bit packet number. Mandatory.
-* CADR (client address) - the observed client IP address and port number. 这当前只是用于调试目的，所以是可选的。
-<br/>
-### Regular Packets
+* CADR (client address) - the observed client IP address and port number. 这当前只是用于调试目的，所以是可选的。<br/>
+
+### 常规报文(Regular Packets)
 &emsp;&emsp;常规报文加上认证和加密的。Public header是加了认证信息，但是并未加密，常规报文的剩余部分是被加密的。在public header后面，常规报文包含AEAD(authenticated encryption and associated data，认证和被加密的数据)数据。这些数据应该按顺序被解密。解密后，明文应该由按顺序的frame组成。<br/>
-### Frame Packet
+
+### 数据报文(Frame Packet)
 &emsp;&emsp;Frame报文的负载由一系列的type前缀的frames组成。报文type的格式后面会描述，总体的格式如下:<br/>
 <pre>
 --- src
@@ -238,7 +242,7 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 ## 报文类型(Frame Types)
 &emsp;&emsp;对于报文类型有两种解释，也就由此定义两种报文类型:
 * 特殊报文(Special Frame Types)<br/>
-特殊报文包含frame type和flag信息在frame type的字段中<br/>
+特殊报文包含frame type和flag信息在frame type的字段中<br/>
 * 常规报文(Regular Frame Types)<br/>
 常规报文只包含frame type在frame type的字段中<br/>
 
@@ -295,7 +299,7 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 +------------+--------------+
 ---
 </pre><br/>
-流报文头部的各个字段描述如下:
+流报文头部的各个字段描述如下:
 * Frame Type: 报文类型是8bit大小，包含各种flag信息(1fdooossB)<br/>
 &emsp;&emsp; * 最左边的bit设置1，表示这是个流报文。The leftmost bit must be set to 1 indicating that this is a STREAM frame.<br/>
 &emsp;&emsp; * f标志位是FIN表示，当设置为1，表示发送端完成该流的发送，并希望半双工关闭(后续详细介绍)<br/>
