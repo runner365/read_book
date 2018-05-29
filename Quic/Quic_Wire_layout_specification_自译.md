@@ -116,7 +116,7 @@
 &emsp;&emsp;packet number的长度基于FLAG_BYTE_SEQUENCE_NUMBER的flag设置在public flag。每一个常规报文regular packet(也就是非public reset和version negotiation报文)都需要被发送方设置packet number。第一个被发送的报文的packet number应该设置成1，后续的报文的packet number应该+1递增。<br/>
 &emsp;&emsp;packet number的64位被放在加密的内容中；因此，QUIC的一方不能发送报文，其packet number不在64bits内。如果QUIC的一方发送的packet number是2^64-1，报文产生CONNECTION_CLOSE报文，错误码是QUIC_SEQUENCE_NUMBER_LIMIT_REACHED，并且不会再发送其他的报文。<br/>
 &emsp;&emsp;大部分情况packet number的48bits长度的传输，为了接收端能清晰的对packet number进行组包，QUIC发送端不应该发送packet number大于2^(bitlength-2)。因此48bits长度的packet number不应该大于(2^46)。<br/>
-&emsp;&emsp;人也被截断的packet number都应该被推断为最接近已经收到最大packet number，其包含这个截断的packet number。这个packet number的传输比例与推断中的地位bits对应。<br/>
+&emsp;&emsp;任何被截断的packet number都应该被推断为最接近已经收到最大packet number，其包含这个截断的packet number。这个packet number的传输比例与推断中的地位bits对应。<br/>
 &emsp;&emsp;Public Flag的处理流程如下: <br/>
 <pre>
 --- src
