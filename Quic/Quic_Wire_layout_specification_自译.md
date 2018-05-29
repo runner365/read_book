@@ -144,7 +144,7 @@ Check the public flags in public header
 
 </pre><br/>
 
-##Special Packets
+## Special Packets
 ### Version Negotiation Packet
 &emsp;&emsp;version协商报文仅仅由服务端发送。version协商报文由8bit的public flag和64bit的connect ID。public flag必须设置PUBLIC_FLAG_VERSION，和64位bit的connect ID。报文后续是一个服务器支持version的信息列表，列表每项是4byte的version字段:<br/>
 <pre>
@@ -188,7 +188,7 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 <br/>
 ### Regular Packets
 &emsp;&emsp;常规报文加上认证和加密的。Public header是加了认证信息，但是并未加密，常规报文的剩余部分是被加密的。在public header后面，常规报文包含AEAD(authenticated encryption and associated data，认证和被加密的数据)数据。这些数据应该按顺序被解密。解密后，明文应该由按顺序的frame组成。<br/>
-#### Frame Packet
+### Frame Packet
 &emsp;&emsp;Frame报文的负载由一系列的type前缀的frames组成。报文type的格式后面会描述，总体的格式如下:<br/>
 <pre>
 --- src
