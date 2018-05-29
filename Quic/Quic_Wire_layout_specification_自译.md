@@ -221,7 +221,7 @@ Tag value map: 这个Tag value map有一下tar-values信息:<br/>
 ### QUIC流的生命周期(Life of a QUIC Stream)
 &emsp;&emsp;QUIC流是双向发送的数据被分配到流分配包中的很多独立序列。stream能被客户单或服务器创建，能与其他的流一起并发发送数据，并且能停止发送。QUIC流的生命周期模型与HTTP/2的非常相似。[RFC7540]
 (QUIC流的HTTP/2用法在本问题后面进行详细描述)<br/>
-&emsp;&emsp;针对指定流发送一个流报文，就隐性的创建一个stream。为了避免stream ID冲突，如果是服务端发起stream的话，stream-ID必须是偶数;客户端发起stream的话，stream-ID必须是单数。0不是一个有效的stream-ID。Stream 1给加密的handshake作为第一个客户端端发起stream使用。当应用HTTP/2 over QUI时，Stream 3为发送所有其他流的压缩头使用，从而确保可靠有序的发送和头部处理。<br/>
+&emsp;&emsp;针对指定流发送一个流报文，就隐性的创建一个stream。为了避免stream ID冲突，如果是服务端发起stream的话，stream-ID必须是偶数;客户端发起stream的话，stream-ID必须是单数。0不是一个有效的stream-ID。Stream 1给加密的handshake作为第一个客户端端发起stream使用。当应用HTTP/2 over QUIC时，Stream 3为发送所有其他流的压缩头使用，从而确保可靠有序的发送和头部处理。<br/>
 &emsp;&emsp;当新流被创建时，连接双方的stream ID应该连续的增长。举例，Stream2应该在Stream 3后创建(stream 3是客户端，stream2是服务端)，但是stream 7肯定不能再stream 9后才创建。对端可能接受的流是无序的。举例，如果在服务端接受packet9包含stream7前，接受到packet10包含stream9，服务器必须能从容处理这样的乱序情况。<br/>
 &emsp;&emsp;如果一方收到一个stream包但并不想接收它，它可以立即返回一个RST_STREAM报文(下面会介绍)。注意，虽然发起方已经在该stream中发送数据，但这些数据会被丢弃。<br/>
 &emsp;&emsp;一旦流被创建，它就能发送和接收数据。也就是说直到流在某方向结束前，这条流上的报文都能持续的被发送。<br/>
