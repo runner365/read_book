@@ -144,7 +144,8 @@ Check the public flags in public header
 
 </pre><br/>
 
-##Special Packets
+## Special Packets
+
 ### Version Negotiation Packet
 &emsp;&emsp;version协商报文仅仅由服务端发送。version协商报文由8bit的public flag和64bit的connect ID。public flag必须设置PUBLIC_FLAG_VERSION，和64位bit的connect ID。报文后续是一个服务器支持version的信息列表，列表每项是4byte的version字段:<br/>
 <pre>
@@ -181,14 +182,17 @@ Check the public flags in public header
 +--------+--------+--------+--------+--------+--------+---
 ---
 </pre>
-Tag value map: 这个Tag value map有一下tar-values信息:
+<br/>
+
+Tag value map: 这个Tag value map有一下tar-values信息:<br/>
 * RNON (public reset nonce proof) - a 64-bit unsigned integer. Mandatory.
 * RSEQ (rejected packet number) - a 64-bit packet number. Mandatory.
-* CADR (client address) - the observed client IP address and port number. 这当前只是用于调试目的，所以是可选的。
-<br/>
-### Regular Packets
+* CADR (client address) - the observed client IP address and port number. 这当前只是用于调试目的，所以是可选的。<br/>
+
+### 常规报文(Regular Packets)
 &emsp;&emsp;常规报文加上认证和加密的。Public header是加了认证信息，但是并未加密，常规报文的剩余部分是被加密的。在public header后面，常规报文包含AEAD(authenticated encryption and associated data，认证和被加密的数据)数据。这些数据应该按顺序被解密。解密后，明文应该由按顺序的frame组成。<br/>
-#### Frame Packet
+
+### 数据报文(Frame Packet)
 &emsp;&emsp;Frame报文的负载由一系列的type前缀的frames组成。报文type的格式后面会描述，总体的格式如下:<br/>
 <pre>
 --- src
@@ -238,7 +242,7 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 ## 报文类型(Frame Types)
 &emsp;&emsp;对于报文类型有两种解释，也就由此定义两种报文类型:
 * 特殊报文(Special Frame Types)<br/>
-特殊报文包含frame type和flag信息在frame type的字段中<br/>
+特殊报文包含frame type和flag信息在frame type的字段中<br/>
 * 常规报文(Regular Frame Types)<br/>
 常规报文只包含frame type在frame type的字段中<br/>
 
@@ -295,7 +299,7 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 +------------+--------------+
 ---
 </pre><br/>
-流报文头部的各个字段描述如下:
+流报文头部的各个字段描述如下:
 * Frame Type: 报文类型是8bit大小，包含各种flag信息(1fdooossB)<br/>
 &emsp;&emsp; * 最左边的bit设置1，表示这是个流报文。The leftmost bit must be set to 1 indicating that this is a STREAM frame.<br/>
 &emsp;&emsp; * f标志位是FIN表示，当设置为1，表示发送端完成该流的发送，并希望半双工关闭(后续详细介绍)<br/>
