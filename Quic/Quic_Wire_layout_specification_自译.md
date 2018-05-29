@@ -221,4 +221,88 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 &emsp;&emsp;当新流被创建时，连接双方的stream ID应该连续的增长。举例，Stream2应该在Stream 3后创建(stream 3是客户端，stream2是服务端)，但是stream 7肯定不能再stream 9后才创建。对端可能接受的流是无序的。举例，如果在服务端接受packet9包含stream7前，接受到packet10包含stream9，服务器必须能从容处理这样的乱序情况。<br/>
 &emsp;&emsp;如果一方收到一个stream包但并不想接收它，它可以立即返回一个RST_STREAM报文(下面会介绍)。注意，虽然发起方已经在该stream中发送数据，但这些数据会被丢弃。<br/>
 &emsp;&emsp;一旦流被创建，它就能发送和接收数据。也就是说直到流在某方向结束前，这条流上的报文都能持续的被发送。<br/>
-&emsp;&emsp;每个QUIC端都能正常终结stream。有3中终结stream的方法:
+&emsp;&emsp;每个QUIC端都能正常终结stream。有3中终结stream的方法:<br/>
+* 正常终结(Normal termination): 因为流是双向的，所以流能是单方向关闭或全关闭。当一方发送的报文带有FIN标志位，就代表单方向关闭。FIN标志着发送FIN的这一方不会再有数据要发送。当QUIC的一方发送并接受了FIN，这方也就被认为完全关闭了。FIN应该放在最后一个用户数据的报文中，但是FIT也能在最后一个用户数据报文后作为空报文发送(有点浪费)
+* 突然结束(Abrupt termination):客户端和服务器能发送RST_STREAM在任何时候。RST_STREAM报文包含error错误码解释失败的原因(错误码列表在本文最后)。当RST_STREAM是流发起方发送，表明有错误发生且不会有更多的数据在该流发送。当RST_STREAM是接受者发送，流的发送方在接收到RST_STREAM报文后，应该立即停止任何数据在该流上的发送。流的接收方也应该意识到有个时间间隔在发送方已经发送的数据，和发送方接收到接收方发来的RST_STREAM报文。为了保证连接级别的流控能正确的被计数，即使RST_STREAM报文已经收到，发送方也需要确认：在该流上的FIN和所有数据字节对端已经收到；或对端收到RST_STREAM。也就是说，RST_STREAM的发送端需要继续用正确的WINDOW_UPDATEs响应这条流上的数据，保证发送方不会有流控阻塞，保证其完成FIN的发送。
+* 当连接断开，流肯定也断开，在下面一节会详细介绍连接断开。
+<br/>
+
+## 连接断开(Connection Termination)
+&emsp;&emsp;连接保持打开状态直到变成空闲状态一段设定的时间。当服务端要断开一个空闲连接，它不需要通知客户端，这回导致移动设备的唤醒信号。QUIC连接一段建立，有两种方式可以结束:<br/>
+* 显式关闭(Explicit Shutdown): 一方发送CONNECTION_CLOSE报文给另外一方表明连接开始中断。一方也可以发送GOAWAY报文给另外一方，而不是用CONNECTION_CLOSE，GOAWAY表明连接很快将关闭。GOAWAY发送到对端后，对端继续对所有活跃的报文进行处理，但是GOAWAY的发送方不再发送新的报文，也不在接收任何新的数据报文。对活跃流的结束，也可以发送CONNECTION_CLOSE。如果当为结束的流是活跃的(没有FIN或RST_STREAM报文被发送或接收)，一方发送CONNECTION_CLOSE报文，那么对端就认为流未完成，已经被非正常结束。
+* 隐式关闭(Implicit Shutdown):默认的QUIC连接的空闲超时是30秒，在连接协商中有个参数"ICSL"定义。最大值是10分钟。如果在空闲超时时间内没有任何网络活跃，连接会关闭。默认情况下CONNECTION_CLOSE将发送。当发送显示关闭太浪费，如移动网络会唤醒手机信号，"静音"关闭的选项被使能。
+&emsp;&emsp;QUIC的一方在任何连接获取的时候，也能通过发送PUBLIC_RESET来终结连接。PUBLIC_RESET的PUBLIC_RESET是等价于TCP的RST。<br/>
+
+# 报文类型和格式(Frame Types and Formats)
+&emsp;&emsp;QUIC报文是以方式存在，报文都有报文类型(frame type)，类型有完全独立的解释，后面跟随fream header字段。所有的frame都被包含在QUIC报文中，没有哪个frame会越过QUIC报文的边界。<br/>
+## 报文类型(Frame Types)
+&emsp;&emsp;对于报文类型有两种解释，也就由此定义两种报文类型:
+* 特殊报文(Special Frame Types)<br/>
+特殊报文包含frame type和flag信息在frame type的字段中<br/>
+* 常规报文(Regular Frame Types)<br/>
+常规报文只包含frame type在frame type的字段中<br/>
+
+当前定义的特殊报文类型(Special Frame Types):<br/>
+<pre>
+--- src
+   +------------------+-----------------------------+
+   | Type-field value |     Control Frame-type      |
+   +------------------+-----------------------------+
+   |     1fdooossB    |  STREAM                     |
+   |     01ntllmmB    |  ACK                        |
+   |     001xxxxxB    |  CONGESTION_FEEDBACK        |
+   +------------------+-----------------------------+
+---
+</pre><br/>
+当前定义的常规报文类型(Regular Frame Types):
+<pre>
+--- src
+   +------------------+-----------------------------+
+   | Type-field value |     Control Frame-type      |
+   +------------------+-----------------------------+
+   | 00000000B (0x00) |  PADDING                    |
+   | 00000001B (0x01) |  RST_STREAM                 |
+   | 00000010B (0x02) |  CONNECTION_CLOSE           |
+   | 00000011B (0x03) |  GOAWAY                     |
+   | 00000100B (0x04) |  WINDOW_UPDATE              |
+   | 00000101B (0x05) |  BLOCKED                    |
+   | 00000110B (0x06) |  STOP_WAITING               |
+   | 00000111B (0x07) |  PING                       |
+   +------------------+-----------------------------+
+---
+</pre><br/>
+
+## 流报文(STREAM Frame)
+&emsp;&emsp;流报文被隐式的创建流并发送报文，格式如下:<br/>
+<pre>
+--- src
+     0        1       …               SLEN
++--------+--------+--------+--------+--------+
+|Type (8)| Stream ID (8, 16, 24, or 32 bits) |
+|        |    (Variable length SLEN bytes)   |
++--------+--------+--------+--------+--------+
+
+  SLEN+1  SLEN+2     …                                         SLEN+OLEN   
++--------+--------+--------+--------+--------+--------+--------+--------+
+|   Offset (0, 16, 24, 32, 40, 48, 56, or 64 bits) (variable length)    |
+|                    (Variable length: OLEN  bytes)                     |
++--------+--------+--------+--------+--------+--------+--------+--------+
+
+  SLEN+OLEN+1   SLEN+OLEN+2
++-------------+-------------+
+| Data length (0 or 16 bits)|
+|  Optional(maybe 0 bytes)  |
++------------+--------------+
+---
+</pre><br/>
+流报文头部的各个字段描述如下:
+* Frame Type: 报文类型是8bit大小，包含各种flag信息(1fdooossB)<br/>
+&emsp;&emsp; * 最左边的bit设置1，表示这是个流报文。The leftmost bit must be set to 1 indicating that this is a STREAM frame.<br/>
+&emsp;&emsp; * f标志位是FIN表示，当设置为1，表示发送端完成该流的发送，并希望半双工关闭(后续详细介绍)<br/>
+&emsp;&emsp; * d表示Data length会在STREAM头部存在，如果设置为0，表示流报文的长度会是一直到报文末尾。<br/>
+&emsp;&emsp; * ooo表示offset字段的长度，000~111分别表示0, 16, 24, 32, 40, 48, 56, or 64 bits长度。<br/>
+&emsp;&emsp; * ss表示Stream ID的长度，00~11分别表示8, 16, 24, or 32 bits长度。<br/>
+* Stream ID: 可变长度的无符号整型ID，标识唯一的流。</br>
+* Offset: 可变长度的无符号整型，表示流数据块开始的偏移位置。</br>
+* Data length: (可选)16bit长的无符号整型，标识报文中的数据长度。如果不需要此字段，表示offset后到末尾的所有字节都是数据，后面没有padding数据。<br/>
+一个流报文肯定要么有非0的数据长度，要么数据长度为0但是FIN标志位被设置1。<br/>
