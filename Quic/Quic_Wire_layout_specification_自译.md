@@ -222,7 +222,7 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 &emsp;&emsp;如果一方收到一个stream包但并不想接收它，它可以立即返回一个RST_STREAM报文(下面会介绍)。注意，虽然发起方已经在该stream中发送数据，但这些数据会被丢弃。<br/>
 &emsp;&emsp;一旦流被创建，它就能发送和接收数据。也就是说直到流在某方向结束前，这条流上的报文都能持续的被发送。<br/>
 &emsp;&emsp;每个QUIC端都能正常终结stream。有3中终结stream的方法:<br/>
-* 正常终结(Normal termination): 因为流是双向的，所以流能是单方向关闭或全关闭。当一方发送的报文带有FIN标志位，就代表单方向关闭。FIN标志着发送FIN的这一方不会再有数据要发送。当QUIC的一方发送并接受了FIN，这方也就被认为完全关闭了。FIN应该放在最后一个用户数据的报文中，但是FIT也能在最后一个用户数据报文后作为空报文发送(有点浪费)
+* 正常终结(Normal termination): 因为流是双向的，所以流能是单方向关闭或全关闭。当一方发送的报文带有FIN标志位，就代表单方向关闭。FIN标志着发送FIN的这一方不会再有数据要发送。当QUIC的一方发送并接受了FIN，这方也就被认为完全关闭了。FIN应该放在最后一个用户数据的报文中，但是FIT也能在最后一个用户数据报文后作为空报文发送(有点浪费)
 * 突然结束(Abrupt termination):客户端和服务器能发送RST_STREAM在任何时候。RST_STREAM报文包含error错误码解释失败的原因(错误码列表在本文最后)。当RST_STREAM是流发起方发送，表明有错误发生且不会有更多的数据在该流发送。当RST_STREAM是接受者发送，流的发送方在接收到RST_STREAM报文后，应该立即停止任何数据在该流上的发送。流的接收方也应该意识到有个时间间隔在发送方已经发送的数据，和发送方接收到接收方发来的RST_STREAM报文。为了保证连接级别的流控能正确的被计数，即使RST_STREAM报文已经收到，发送方也需要确认：在该流上的FIN和所有数据字节对端已经收到；或对端收到RST_STREAM。也就是说，RST_STREAM的发送端需要继续用正确的WINDOW_UPDATEs响应这条流上的数据，保证发送方不会有流控阻塞，保证其完成FIN的发送。
 * 当连接断开，流肯定也断开，在下面一节会详细介绍连接断开。
 <br/>
@@ -230,15 +230,15 @@ Tag value map: 这个Tag value map有一下tar-values信息:
 ## 连接断开(Connection Termination)
 &emsp;&emsp;连接保持打开状态直到变成空闲状态一段设定的时间。当服务端要断开一个空闲连接，它不需要通知客户端，这回导致移动设备的唤醒信号。QUIC连接一段建立，有两种方式可以结束:<br/>
 * 显式关闭(Explicit Shutdown): 一方发送CONNECTION_CLOSE报文给另外一方表明连接开始中断。一方也可以发送GOAWAY报文给另外一方，而不是用CONNECTION_CLOSE，GOAWAY表明连接很快将关闭。GOAWAY发送到对端后，对端继续对所有活跃的报文进行处理，但是GOAWAY的发送方不再发送新的报文，也不在接收任何新的数据报文。对活跃流的结束，也可以发送CONNECTION_CLOSE。如果当为结束的流是活跃的(没有FIN或RST_STREAM报文被发送或接收)，一方发送CONNECTION_CLOSE报文，那么对端就认为流未完成，已经被非正常结束。
-* 隐式关闭(Implicit Shutdown):默认的QUIC连接的空闲超时是30秒，在连接协商中有个参数"ICSL"定义。最大值是10分钟。如果在空闲超时时间内没有任何网络活跃，连接会关闭。默认情况下CONNECTION_CLOSE将发送。当发送显示关闭太浪费，如移动网络会唤醒手机信号，"静音"关闭的选项被使能。
+* 隐式关闭(Implicit Shutdown):默认的QUIC连接的空闲超时是30秒，在连接协商中有个参数"ICSL"定义。最大值是10分钟。如果在空闲超时时间内没有任何网络活跃，连接会关闭。默认情况下CONNECTION_CLOSE将发送。当发送显示关闭太浪费，如移动网络会唤醒手机信号，"静音"关闭的选项被使能。
 &emsp;&emsp;QUIC的一方在任何连接获取的时候，也能通过发送PUBLIC_RESET来终结连接。PUBLIC_RESET的PUBLIC_RESET是等价于TCP的RST。<br/>
 
 # 报文类型和格式(Frame Types and Formats)
-&emsp;&emsp;QUIC报文是以方式存在，报文都有报文类型(frame type)，类型有完全独立的解释，后面跟随fream header字段。所有的frame都被包含在QUIC报文中，没有哪个frame会越过QUIC报文的边界。<br/>
+&emsp;&emsp;QUIC报文是以方式存在，报文都有报文类型(frame type)，类型有完全独立的解释，后面跟随fream header字段。所有的frame都被包含在QUIC报文中，没有哪个frame会越过QUIC报文的边界。<br/>
 ## 报文类型(Frame Types)
 &emsp;&emsp;对于报文类型有两种解释，也就由此定义两种报文类型:
 * 特殊报文(Special Frame Types)<br/>
-特殊报文包含frame type和flag信息在frame type的字段中<br/>
+特殊报文包含frame type和flag信息在frame type的字段中<br/>
 * 常规报文(Regular Frame Types)<br/>
 常规报文只包含frame type在frame type的字段中<br/>
 
