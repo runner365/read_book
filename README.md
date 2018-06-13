@@ -8,7 +8,7 @@ webrtc的主要内容:<br/>
 + RTP/RTCP传输
 + P2P
 + 各种信令协议
-
++ QUIC协议(未来用QUIC替代UDP的可能性)
 开始自学英文协议文档方式，一点点的深入，一边提高英文能力，一边理解各种协议和具体实现。<br/>
 首先，从关键的RTP/RTCP协议基础开始。<br/>
 
@@ -44,3 +44,7 @@ webrtc的主要内容:<br/>
 * FU-A(同一时间和顺序的分片模式)
 
 对于STAP-B，MTAP，FU-B等，因为当前没有应用场景，在实际工作中用不到，因此不进行翻译。<br/>
+
+## 1.3 QUIC
+原文链接: [QUIC wire specification](https://docs.google.com/document/d/1WJvyZflAO2pq77yOLbp9NsGjC1CHetAXV8I0fQe-B_U/edit)<br/>
+自译文档连接: [QUIC协议自译](https://github.com/runner365/read_book/blob/master/Quic/Quic_Wire_layout_specification_%E8%87%AA%E8%AF%91.md)<br/>
