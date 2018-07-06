@@ -1,5 +1,5 @@
-# QUIC概述
 英文原文链接:[QUIC wire specification](https://docs.google.com/document/d/1WJvyZflAO2pq77yOLbp9NsGjC1CHetAXV8I0fQe-B_U/edit)<br/>
+# QUIC概述
 &emsp;&emsp;本节我们主要介绍QUIC的关键功能和优点。QUIC功能上等于TCP+TLS+HTTP/2，但是基于UDP传输的。QUIC优于TCP+TLS+HTTP/2的关键点有:<br/>
 * connect连接建立的低延时
 * 灵活的拥塞控制
