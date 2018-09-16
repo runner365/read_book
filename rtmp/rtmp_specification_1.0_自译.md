@@ -136,3 +136,23 @@ Chunk basic header 1
 </pre>
 chunk stream id值范围64-319是其头中的两个字节。ID为第二个字节+64。<br/>
 <br/>
+<pre>
+ 0                   1
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|fmt|     0     |   cs id - 64  | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     Chunk basic header 2
+</pre>
+chunk streamid 54-65599范围在3个字节的版本中编码。ID等于：第三个字节*256+第二个字节+64。<br/>
+<br/>
+<pre>
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|fmt|     1     |         cs id - 64            | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+               Chunk basic header 3
+</pre>
+Chunk stream IDs 64-65599 can be encoded in the 3-byte version of
+   this field.  ID is computed as ((the third byte)*256 + (the second
+   byte) + 64).
