@@ -88,4 +88,5 @@ C2和S2都是1536字节长，是对S1/C1分别的回复，由以下字段组成:
 * Random echo (1528 bytes):  这个字段必须包含随机数据对端发过来的，S1(对C2)或者S2(对C1)。双方都可以用time, time2字段来估计带宽和连接的延时，当然这比一定有用；
 
 ### 5.2.5.  Handshake图解
-<div align=center>![handshake图解](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20handshake.png)
+![handshake图解](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20handshake.png)
+
