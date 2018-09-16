@@ -89,4 +89,50 @@ C2和S2都是1536字节长，是对S1/C1分别的回复，由以下字段组成:
 
 ### 5.2.5.  Handshake图解
 ![handshake图解](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20handshake.png)
+<br/>
+下面的描述握手图解的流程，3个状态:
+* Uninitialized: 协议版本在过程中发送。客户端和服务端都没有初始化。客户端用C0发送协议版本。如果服务器支持该版本，服务端回复S0/S1。如果没有，服务端回复该有的行为。在RTMP中，就是中断连接。
+* Version Sent:  客户端和服务端在非初始化状态后，能进入确定版本状态。客户端等待S1，服务端等待C1。当收到报文，客户端发送C2，服务端发送S2。状态就成Ack sent状态。
+* Ack Sent: 客户端和服务端相互等待S2/C2状态。
+* Handshake Done:  握手完成，客户端和服务端可以开始交换信息。
 
+## 5.3 Chunking
+握手后，连接可以服用一路或多路chunk stream。每个chunk stream都能从一个消息流中承载一种类型消息。每个chunk都能由唯一的ID定义，也就是chunk stream ID。chunk是通过网络发送。当网络传输时，每个chunk在前一个chunk发送完成后才发送。在接收端，chunk分片会被根据chunk stream id组包成完整的消息体。<br/>
+<br/>
+Chunking运行上层协议把大报文分片成小报文，以此防止大尺寸低优先级报文(如视频)阻塞到小尺寸高优先级报文(如控制报文)。<br/>
+<br/>
+Chunking也允许小报文能节省的报文头发送，也就是chunk header能压缩头信息，信息能包含在消息本身中。<br/>
+<br/>
+chunk size是可配置的。它能通过set chunk size控制协议来定义(在5.4.1中)。大的chunk size能降低CPU占用率，但是大尺寸的chunk能对低带宽连接导致高延时。而过小的chunk对高带宽流不是很好。chunk size是双方单方向来独立维护的。<br/>
+<br/>
+### 5.3.1 Chunk格式
+每个chunk由header和data组成。头由3部分组成:
+<pre>
++--------------+----------------+--------------------+--------------+ 
+| Basic Header | Message Header | Extended Timestamp | Chunk Data   | 
++--------------+----------------+--------------------+--------------+ 
+|<-------------------         Chunk Header        ----------------->|
+</pre>
+* Basic Header (1 to 3 bytes):  这个字段包括stream id和chunk type。chunk type定义了message header的格式。长度完全由chunk stream id决定，其是可变长度的字段
+* Message Header (0, 3, 7, or 11 bytes):  这个字段包含消息要发送的信息(无论是全部还是部分)。该长度通过chunk header中的chunk type来定义
+* Extended Timestamp (0 or 4 bytes): 这个字段chunk message header中的时间戳。 5.3.1.3中有详细信息。
+* Chunk Data (variable size):  chunk的负载数据，数据填充到chunk size的大小。
+
+#### 5.3.1.1.  Chunk Basic Header
+这个chunk basic header包含chunk stream id 和chunk type(有fmt字段表示)。chunk type定义message header的格式类型。chunk basic header字段可以是1，2或3字节，其有由chunk stream id决定。<br/>
+<br/>
+协议支持到65597，streamid的范围是3--65599。ID中0，1，2是保留的。值0定义id为两个字节，64-319(第二个字节+64)。值1定义3个字节，范围64-65599(第三个字节*256+第二个字节+64)。值范围3-63代表完整的streamid。chunk stream id为2表示底层协议的控制消息和命令。<br/>
+<br/>
+bit 0-5(低字节)在chunk basic header中代表chunk stream id。<br/>
+<br/>
+chunk streamid 2-63 是这个字段的第一个版本。<br/>
+<br/>
+<pre>
+ 0 1 2 3 4 5 6 7 
++-+-+-+-+-+-+-+-+ 
+|fmt|   cs id   | 
++-+-+-+-+-+-+-+-+
+Chunk basic header 1
+</pre>
+chunk stream id值范围64-319是其头中的两个字节。ID为第二个字节+64。<br/>
+<br/>
