@@ -207,3 +207,14 @@ Type 1 chunk headers是7字节长。message stream ID不在其内。这个chunk�
 对于示例1(5.3.2.1节)。如果第一个消息与第二个消息的时间戳一样，那么type3可以作为第二个chunk紧跟着第一个chunk(type0)，二不需要type 2。如果type 3紧跟着type0的chunk，那么type3 chunk的时间戳与type0 chunk的时间戳绝对一致。<br/>
 
 ##### 5.3.1.2.5.  Common Header Fields
+* timestamp delta (3 bytes):  针对type-1或type-2的chunk，前一个时间戳与后一个时间戳的差值，那么就该使用这个字段。如果这个delta大于等于16777215(16进制0xFFFFFF)，这个字段就必须是16777215，意味着Extended Timestamp字段会有32bits的值。此外这个字段就是表示准确的时间戳。
+* message length (3 bytes):  针对type-0或type-1的chunk，消息的长度就在这个字段中。注意这个不是chunk负载的长度。chunk负载的长度是chunk size的最大值，针对所有chunk除了最后一个chunk，剩余的字节就放在最后一个chunk中(当然其也可能是整个长度，针对小消息来说)
+* message type id (1 byte):  针对type-0或type-1，这个消息的type在这个字段中。注意
+* message stream id (4 bytes):  针对type-0的chunk，消息stream ID会被发送。特别是，所有同一个chunk stream的消息都将来源于同一个消息流。也可能把多个不同的消息放入同一个chunk stream中，当然这就失去了头部压缩的好处。如果一个message流关闭，而另外下一个流打开，没有什么理由上次存在的chunk stream 不能被新的type-0 chunk重用。
+
+#### 5.3.1.3.  Extended Timestamp
+extended timestamp字段用于timestamp字段大于等于16777215(0xFFFFFF)；那是为了时间戳不能满足于在type0,1,2 chunk中24bits大小的字段。这个字段是完整的32bit的时间戳或时间戳差值。这个字段在chunk type 0中表示时间戳，或type-1或type-2 chunk中表示timestamp的差值，timestamp字段的值必须是16777215(0xFFFFFF)。这个字段当先前使用的type 0, 1, 或2 chunk对同一个chunk stream ID, 表示type3该字段是上次extended timesamp field。
+
+### 5.3.2.  Examples
+#### 5.3.2.1.  Example 1
+本例展示了单个音频消息。这个例子展示了消息有很多重复信息。
