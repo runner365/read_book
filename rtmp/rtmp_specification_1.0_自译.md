@@ -159,3 +159,47 @@ chunk streamid 54-65599范围在3个字节的版本中编码。ID等于：第三
 <br/><br/>
 chunk stream ID是值64-319，是头中两个字节或三个字节的格式模式。<br/>
 
+#### 5.3.1.2 chunk message header
+有chunk message header的不同格式，其有chunk basic header中的fmt字段定义。<br/>
+<br/>
+在应用中，应该用选择使用压缩比例最高的chunk message header。
+
+##### 5.3.1.2.1 Type 0
+Type 0 chunk header是11字节长。这个type 0类型必须是在chunk stream的最开始使用，并且无论什么时候stream timestamp都应该是向后发展的。<br/>
+<pre>
+0                    1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|                timestamp                      |message length | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|     message length (cont)     |message type id| msg stream id | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|             message stream id (cont)          | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                       Chunk Message Header - Type 0
+</pre>
+* timestamp (3 bytes):  对于type-0的chunk，消息使用绝对时间戳。如果时间戳大于等于16777215 (16进制0xFFFFFF)，这个字段必须是16777215，意味着Extended Timestamp字段32bit的时间戳。此外，这个字段代表完整的时间戳。
+##### 5.3.1.2.2 Type 1
+Type 1 chunk headers是7字节长。message stream ID不在其内。这个chunk带有上个chunk相同的chunk stream id。流都是变长的消息(举例，多种视频格式)应该用这个格式作为第二个stream的chunk报文。
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|                timestamp delta                |message length | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|      message length (cont)    |message type id| 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+               Chunk Message Header - Type 1
+</pre>
+##### 5.3.1.2.3 Type 2
+类型2chunk headers是3字节长。stream ID和message length都不包含；chunk有与前一个chunk相同的stream ID和message length。流是定长的消息(例如，音频和数据格式)应该用这个类型，作为第二个stream的chunk报文。
+<pre>
+ 0                   1                   2
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|                timestamp delta                | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                       Chunk Message Header - Type 2
+</pre>
+##### 5.3.1.2.4 Type 3
+类型3其实没有message header。stream ID，message length和timestamp都不存在。这个chunk类型都继承前一个相同chunk stream ID的chunk所有字段。当单个消息被切分多个chunk，所有的消息除了第一个chunk外都用这个类型。
