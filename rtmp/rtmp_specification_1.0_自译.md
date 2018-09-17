@@ -218,3 +218,4 @@ extended timestamp字段用于timestamp字段大于等于16777215(0xFFFFFF)；�
 ### 5.3.2.  Examples
 #### 5.3.2.1.  Example 1
 本例展示了单个音频消息。这个例子展示了消息有很多重复信息。
+![Sample audio messages to be made into chunks](https://github.com/runner365/read_book/blob/master/rtmp/pic/chunk%20audio%20example1.png)
