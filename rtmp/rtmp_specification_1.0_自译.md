@@ -126,7 +126,6 @@ chunk size是可配置的。它能通过set chunk size控制协议来定义(在5
 bit 0-5(低字节)在chunk basic header中代表chunk stream id。<br/>
 <br/>
 chunk streamid 2-63 是这个字段的第一个版本。<br/>
-<br/>
 <pre>
  0 1 2 3 4 5 6 7 
 +-+-+-+-+-+-+-+-+ 
@@ -134,8 +133,8 @@ chunk streamid 2-63 是这个字段的第一个版本。<br/>
 +-+-+-+-+-+-+-+-+
 Chunk basic header 1
 </pre>
-chunk stream id值范围64-319是其头中的两个字节。ID为第二个字节+64。<br/>
 <br/>
+chunk stream id值范围64-319是其头中的两个字节。ID为第二个字节+64。<br/>
 <pre>
  0                   1
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
@@ -144,8 +143,8 @@ chunk stream id值范围64-319是其头中的两个字节。ID为第二个字节
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      Chunk basic header 2
 </pre>
-chunk streamid 54-65599范围在3个字节的版本中编码。ID等于：第三个字节*256+第二个字节+64。<br/>
 <br/>
+chunk streamid 54-65599范围在3个字节的版本中编码。ID等于：第三个字节*256+第二个字节+64。<br/>
 <pre>
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
@@ -153,6 +152,10 @@ chunk streamid 54-65599范围在3个字节的版本中编码。ID等于：第三
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
                Chunk basic header 3
 </pre>
-Chunk stream IDs 64-65599 can be encoded in the 3-byte version of
-   this field.  ID is computed as ((the third byte)*256 + (the second
-   byte) + 64).
+<br/>
+* cs id (6 bits):  这个字段包含chunk stream ID，值2-63。值0和1的是2或3字节的版本。
+* fmt (2 bits):  这个字段定义4中类型的chunk message header。这个chunk message header的类型介绍在下一节。
+* cs id - 64 (8 or 16 bits):  这个字段包含最小为64的chunk stream id。举例，ID 365就是一个1的cs id字段和16bit的301字段。
+<br/>
+chunk stream ID是值64-319，是头中两个字节或三个字节的格式模式。<br/>
+
