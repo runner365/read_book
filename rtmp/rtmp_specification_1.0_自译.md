@@ -220,5 +220,29 @@ extended timestamp字段用于timestamp字段大于等于16777215(0xFFFFFF)；�
 本例展示了单个音频消息。这个例子展示了消息有很多重复信息。
 ![Sample audio messages to be made into chunks](https://github.com/runner365/read_book/blob/master/rtmp/pic/chunk%20audio%20example1.png)
 <br/>
-下一张图表显示chunk在流中的构成。从message 3往后，数据传输头部都优化了。在message 3后，每个message的头部只有1个直接
+下一张图表显示chunk在流中的构成。从message 3往后，数据传输头部都优化了。在message 3后，每个message的头部只有1个字节
 ![Sample audio messages to be made into chunks](https://github.com/runner365/read_book/blob/master/rtmp/pic/chunk%20audio%20example2.png)
+
+#### 5.3.2.2.  Example 2
+本例演示了一个消息大于128字节的chunk，被切分成多个chunks。
+![sample video message to be made into chunks](https://github.com/runner365/read_book/blob/master/rtmp/pic/chunk%20video%20example1.png)
+下图是chunk的组成:<br/>
+![Format of each of the chunks](https://github.com/runner365/read_book/blob/master/rtmp/pic/chunk%20video%20example2.png)
+<br/>
+chunk 1的头数据表明了这个message总共307字节长。<br/>
+<br/>
+从上面两个例子看，chunk type 3能有两种使用方法。第一种是连续的message。第二种是一个新消息其头部能被后续的数据继续使用。
+
+## 5.4 Protocal Control Message(控制消息)
+协议控制消息必须是message stream ID等于0(0表示控制协议)，并且chunk stream ID必须是2。协议控制消息在收到后需要即刻处理；他们的时间戳可以忽略。
+
+### 5.4.1 Set Chunk Size（1）
+控制消息1，Set Chunk Size，用于通知对端最新的chunk size。<br/>
+<br/>
+chunk size最大值默认是128bytes，但是客户端和服务器可以改变这个值，并用这个消息来通知对方。举个例子，假想一个客户端想要发送音频包131bytes，且其chunk size是128字节。在这种情况下，客户端可以发送这个控制消息给服务端，通知它chunk size现在修改为131字节了。然后，客户端就可以在一个chunk中发送音频数据了。<br/>
+<br/>
+最大的chunk size至少是128字节，内容至少
+
+The maximum chunk size SHOULD be at least 128 bytes, and MUST be at
+   least 1 byte.  The maximum chunk size is maintained independently for
+   each direction.
