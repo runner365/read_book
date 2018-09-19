@@ -307,7 +307,7 @@ sequence number (32 bits):  这个字段表示当前接收到的sequence number�
       Payload for the ‘Set Peer Bandwidth’ protocol message
 </pre>
 </br>
-Limit type是如下几种:
+Limit type是如下几种:<br/>
 * 0 - Hard: 对端应该限制出口带宽到window size。
 * 1 - Soft: 对端应该限制其出口带宽到消息中的window size，或限制效果更小的带宽。
 * 2 - Dynamic: 如果钱一个Limit Type是Hard，那么就认为这个消息类型是Hard，否则丢弃这个消息。
