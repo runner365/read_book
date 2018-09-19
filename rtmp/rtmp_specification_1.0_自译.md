@@ -221,3 +221,4 @@ extended timestamp字段用于timestamp字段大于等于16777215(0xFFFFFF)；�
 ![Sample audio messages to be made into chunks](https://github.com/runner365/read_book/blob/master/rtmp/pic/chunk%20audio%20example1.png)
 <br/>
 下一张图表显示chunk在流中的构成。从message 3往后，数据传输头部都优化了。在message 3后，每个message的头部只有1个直接
+![Sample audio messages to be made into chunks](https://github.com/runner365/read_book/blob/master/rtmp/pic/chunk%20audio%20example2.png)
