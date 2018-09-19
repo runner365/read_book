@@ -241,8 +241,76 @@ chunk 1的头数据表明了这个message总共307字节长。<br/>
 <br/>
 chunk size最大值默认是128bytes，但是客户端和服务器可以改变这个值，并用这个消息来通知对方。举个例子，假想一个客户端想要发送音频包131bytes，且其chunk size是128字节。在这种情况下，客户端可以发送这个控制消息给服务端，通知它chunk size现在修改为131字节了。然后，客户端就可以在一个chunk中发送音频数据了。<br/>
 <br/>
-最大的chunk size至少是128字节，内容至少
+最大的chunk size至少是128字节，内容至少1字节。chunk size的最大值每个方向独立维护。<br/>
+<br/>
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|0|                    chunk size (31 bits)                     | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        Payload for the ‘Set Chunk Size’ protocol message
+</pre>
+* 0: 这个bit必须是0;
+* chunk size (31 bits): 这个字段包含chunk size的最大值，发送端接下来的chunk都以这个chunk size作为有效尺寸来发送，直到有新的set chunk size消息来到。值的范围是1到2147483647(0x7fffffff)；然后，所有值大于16777215(0xffffff)的都被认为是16777215，因为没有哪个chunk大小会比message还有大，因为message都是小于16777215字节的。
 
-The maximum chunk size SHOULD be at least 128 bytes, and MUST be at
-   least 1 byte.  The maximum chunk size is maintained independently for
-   each direction.
+### 5.4.2 Abort Message(2)
+协议控制消息2，Abort Message，被用于通知对端如果还在等待chunk包来完成message组播啊，可以丢弃掉已经接收到的chunk报文。对端接收到这个类型协议的报文，其负载是chunk stream ID。一个应用应该在开始关闭连接是发送这个消息，为了对端不用在等待未完成的message。<br/>
+<br/>
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|                  chunk stream id (32 bits)                    | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       Payload for the ‘Abort Message’ protocol message
+</pre>
+chunk stream ID (32 bits):  这个字段包含chunk stream ID。也就是这个chunk stream ID的消息将被丢弃。
+
+### 5.4.3 Acknowledgement(3)
+客户端或服务器必须在接收到window size消息后，发送Acknowledgement给对端。这个windows size是发送者还没有接收到acknowledgement前发送最大的字节数。消息定义了sequence number，其是目前已经接收到的字节数。<br/>
+<br/>
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|                  sequence number (4 bytes)                    | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       Payload for the ‘Acknowledgement’ protocol message
+</pre>
+<br/>
+sequence number (32 bits):  这个字段表示当前接收到的sequence number。
+
+### 5.4.4 Window Acknowledgement Size(5)
+客户端或服务器发送此消息去通知对端window size在发送acknowledgments之前。发送端期望收到acknowledgment在发送端发送完window size的字节数后。接收端必须在接收到windows size的数据后，发送acknowledgement(5.4.3节)，或者从会话一开始还没有acknowledgement被发送前。<br/>
+<br/>
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|           Acknowledgement Window size (4 bytes)               | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ Payload for the ‘Window Acknowledgement Size’ protocol message
+</pre>
+
+### 5.4.5 Set Peer Bandwidth(6)
+客户端或服务器发送这个消息以限制对端发送带宽。对端收到这个消息后通过限制发送数量来限制输出带宽，但是不需要针对这个消息的回复。对端接收到这个消息，如果window size与上次这个消息的发送者发送的不一样，就应该返回一个window acknowledgement size massage。
+<br>
+<pre>
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|                  Acknowledgement Window size                  | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+|    Limit Type |
++-+-+-+-+-+-+-+-+
+      Payload for the ‘Set Peer Bandwidth’ protocol message
+</pre>
+</br>
+Limit type是如下几种:
+* 0 - Hard: 对端应该限制出口带宽到window size。
+* 1 - Soft: 对端应该限制其出口带宽到消息中的window size，或限制效果更小的带宽。
+* 2 - Dynamic: 如果钱一个Limit Type是Hard，那么就认为这个消息类型是Hard，否则丢弃这个消息。
+
+# 6. RTMP Message Formats
+
