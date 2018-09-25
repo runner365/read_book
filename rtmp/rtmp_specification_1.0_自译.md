@@ -328,4 +328,9 @@ RTMP消息有两部分: 头部和载体。
 * Timestamp: 4字节字段表示消息的时间戳，4字节是大字节序。
 * Message Stream Id: 3个字节的字段，定义消息流的唯一性。其为大字节序。
 <br/>
+!(rtmp message header)[https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20message%20header.png]
+<br/>
+
+### 6.1.2 Message Payload
+消息的另外一部分是负载，其是消息中实在的数据部分。举例，它可以是音频数据或视频数据。负载的格式不是本文的内容范围。
 
