@@ -313,4 +313,18 @@ Limit type是如下几种:<br/>
 * 2 - Dynamic: 如果钱一个Limit Type是Hard，那么就认为这个消息类型是Hard，否则丢弃这个消息。
 
 # 6. RTMP Message Formats
+这部分定义了RTMP消息的格式，其在RTMP chunk steam上进行传输。<br/>
+当RTMP被设计来用RTMP chunk stream上来传输，它能用任何传输协议来传输。RTMP chunk stream和RTMP一起工作，是非常适合广泛的音视频应用的，点到点和点到多点的直播，VOD的点播业务，和互相交互的视频会议。<br/>
+<br/>
+服务端和客户端直接通过发送RTMP message来进行通信。消息包括音频，视频，数据和其他信息。<br/>
+<br/>
+RTMP消息有两部分: 头部和载体。
+
+### 6.1.1 Message Header
+消息头包括以下部分:<br/>
+* Message Type: 一个字节的字段，表示消息类型。范围是1-6是为协议控制消息而保留的。<br/>
+* Length: 3个字节字段表示负载长度，其是大字节序。
+* Timestamp: 4字节字段表示消息的时间戳，4字节是大字节序。
+* Message Stream Id: 3个字节的字段，定义消息流的唯一性。其为大字节序。
+<br/>
 
