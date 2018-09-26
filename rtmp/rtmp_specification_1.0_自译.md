@@ -327,12 +327,35 @@ RTMP消息有两部分: 头部和载体。
 * Length: 3个字节字段表示负载长度，其是大字节序。
 * Timestamp: 4字节字段表示消息的时间戳，4字节是大字节序。
 * Message Stream Id: 3个字节的字段，定义消息流的唯一性。其为大字节序。
-<br/>
-!(rtmp message header)[https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20message%20header.png]
+![rtmp message header](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20message%20header.png)
 <br/>
 
 ### 6.1.2 Message Payload
 消息的另外一部分是负载，其是消息中实在的数据部分。举例，它可以是音频数据或视频数据。负载的格式不是本文的内容范围。
 
 ## 6.2 User Control Message(4)
+RTMP用message type ID 4作为User Control message。这些消息包含RTMP streaming层使用的信息。协议消息(protocal message)的ID是1, 2, 3, 5和6的RTMP chunk stream协议(5.4节)。<br/>
+<br/>
+User Conntrol消息应该使用message stream ID 0(其是control stream) 和，当在rtmp chunk stream上发送，chunk stream ID是2。User Control消息在其在流中接收到时就有效，其时间戳可以忽略。<br/>
+<br/>
+客户端和服务端发送message去通知对端关于user control时间。消息承载事件类型和事件数据。<br/>
+<br/>
+<pre>
++------------------------------+-------------------------
+|     Event Type (16 bits)     | Event Data
++------------------------------+-------------------------
+     Payload for the ‘User Control’ protocol message
+</pre>
+<br/>
+消息的头两个字节是Event Type。Event Type后面紧跟着Event Data。Event Data的size是可变的。注意，这个消息是需要在rtmp chunk stream上传送的，最大的chunk size(5.4.1节)必须是足够大而让这个消息能放入一个chunk中。<br/>
+<br/>
+
+# 7. RTMP Command Messages
+本节介绍服务器与客户端之间不同类型的消息和命令交互。<br/>
+<br/>
+在服务器与客户端之间交互消息的不同类型包括audio消息其承载音频数据，video消息其承载video数据，data消息承载用户信息数据，还有shared object消息和command消息。shared object消息提供方法为管理多个客户端和服务器之间的分发消息。Command消息承载AMF编码命令。客户端或服务器还可以发送RPC命令来进行交流。<br/>
+<br/>
+### 7.1.1 Command Messages(20, 17)
+Command消息承载服务器与客户端之间的AMF编码消息。这些消息Message type 20表示AMF0格式，Message type 17是AMF3格式。这些消息被用来发送完成如connect, createStream, publish, play, pause on the peer。Command消息中如onstatus, result等，被用来通知发送者命令指示的结果和状态。命令消息有command name, transaction ID, 和command object其携带相关参数。客户端和服务器能也能通过流执行RPC命令，其用command message发送给对端。<br/>
+### 7.1.2 Data Message(18,15)
 
