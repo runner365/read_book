@@ -358,4 +358,25 @@ User Conntrol消息应该使用message stream ID 0(其是control stream) 和，�
 ### 7.1.1 Command Messages(20, 17)
 Command消息承载服务器与客户端之间的AMF编码消息。这些消息Message type 20表示AMF0格式，Message type 17是AMF3格式。这些消息被用来发送完成如connect, createStream, publish, play, pause on the peer。Command消息中如onstatus, result等，被用来通知发送者命令指示的结果和状态。命令消息有command name, transaction ID, 和command object其携带相关参数。客户端和服务器能也能通过流执行RPC命令，其用command message发送给对端。<br/>
 ### 7.1.2 Data Message(18,15)
+客户单和服务器通过发送这个消息来发送Metadata，或用户数据给对端。Metadata包括音频、视频的细节信息，如流创建时间，流时间长短等。这些消息使用message type 19表示AMF0编码和message type 15作为AMF3编码。<br/>
+
+### 7.1.3 Shared Object Message
+使用率低，先不翻译。
+
+### 7.1.4 Audio Message(8)
+客户端或服务器发送此消息来承载音频数据到对端，message type 8就是专门为audio message。
+
+### 7.1.5 Video Message(9)
+客户端或服务器发送此消息来承载视频数据到对端，message type 9就是专门为video message。
+
+### 7.1.6 Aggregate Message(22)
+使用率低，先不翻译
+
+### 7.1.7 User Control Message Events
+使用率低，先不翻译
+
+## 7.2 命令类型(Types of Commands)
+
+
+
 
