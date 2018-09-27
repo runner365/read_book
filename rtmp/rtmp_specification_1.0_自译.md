@@ -414,8 +414,8 @@ NetConnection管理一个在客户端应用和服务器之间的双向连接。�
 </pre>
 <br/>
 下面是connect命令的command对象的name-value对描述介绍。
+
 ![rtmp connect object](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20object.png)
-<br/>
 
 
 
