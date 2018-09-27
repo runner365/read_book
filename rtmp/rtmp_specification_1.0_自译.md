@@ -383,7 +383,7 @@ _result或_error的命令字符串标识着返回信息。transaction ID标识�
 接下来的命令分类如下:
 * NetConnection: rtmp上层协议中服务端和客户单之间的connection命令系列。
 * NetStream: 其表示通道，音频、视频和相关数据都在上面传输。我们也发送命令如Play，pause等，其控制数据流。
-<br/>
+
 ### 7.2.1 NetConnection命令
 NetConnection管理一个在客户端应用和服务器之间的双向连接。此外，还能提供远程过程调用RPC。<br/>
 <br/>
@@ -392,7 +392,7 @@ NetConnection管理一个在客户端应用和服务器之间的双向连接。�
 * call
 * close
 * createStream
-<br/>
+
 #### 7.2.1. connect
 客户端发送connect命令给服务端建立连接而得到应用实例。<br/>
 <br/>
@@ -414,7 +414,6 @@ NetConnection管理一个在客户端应用和服务器之间的双向连接。�
 </pre>
 <br/>
 下面是connect命令的command对象的name-value对描述介绍。<br/>
-<br/>
 ![rtmp connect object](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20object.png)
 <br/>
 
