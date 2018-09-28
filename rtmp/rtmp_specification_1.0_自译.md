@@ -416,8 +416,18 @@ NetConnection管理一个在客户端应用和服务器之间的双向连接。�
 下面是connect命令的command对象的name-value对描述介绍。
 
 ![rtmp connect object](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20object.png)
-
-
+音频编码属性的flag值:
+![rtmp connect audiocodec property](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20audio%20property.png)
+<br/>
+视频编码属性的flag值:
+![rtmp connect videocode property](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20video%20property.png)
+<br/>
+对象编码的值对应关系:
+![rtmp connect object property](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20object.png)
+<br/>
+从服务器到客户端的命令返回值:
+![rtmp connect response](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20response.png)
+<br/>
 
 
 
