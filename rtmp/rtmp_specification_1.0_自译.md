@@ -1,3 +1,5 @@
+英文原文: [rtmp_specification_1.0.pdf](https://github.com/runner365/read_book/blob/master/rtmp/rtmp_specification_1.0.pdf)
+
 # 5 RTMP Chunk Stream
 本节定义RTMP chunk stream。它为高层的媒体流协议提供多路复用和包封装的服务。<br/>
 <br/>
