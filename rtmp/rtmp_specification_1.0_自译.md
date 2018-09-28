@@ -414,21 +414,27 @@ NetConnection管理一个在客户端应用和服务器之间的双向连接。�
 </pre>
 <br/>
 下面是connect命令的command对象的name-value对描述介绍。
+
 ![rtmp connect object](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20object.png)
 <br/>
 音频编码属性的flag值:
+
 ![rtmp connect audiocodec property](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20audio%20property.png)
 <br/>
 视频编码属性的flag值:
+
 ![rtmp connect videocode property](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20video%20property.png)
 <br/>
 对象编码的值对应关系:
+
 ![rtmp connect object property](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20object.png)
 <br/>
 从服务器到客户端的命令返回值:
+
 ![rtmp connect response](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20response.png)
 <br/>
 connect消息的交互流程图:
+
 ![rtmp connect flow](https://github.com/runner365/read_book/blob/master/rtmp/pic/rtmp%20connect%20message%20flow.png)
 <br/>
 消息流的交互如下:<br/>
@@ -445,48 +451,6 @@ connect消息的交互流程图:
 6. 服务端发送result命令消息通知客户端关于connection连接的结果。命令定义transaction ID(其对connect command一致为1)。此消息也定义一些属性，如Flag media Server version(string)。此外其定义其他的返回属性，如level(string), code(string), desription(string), objectencoding(number)，等等。<br/>
 
 #### 7.2.1.2 Call
-使用率低，暂时不翻译
-
-#### createStream
-客户单发送此命令给服务器来为消息通信创建逻辑通道，如audio，video和metadata，都会在这个createstream命令创建的逻辑通道上来传输。<br/>
-<br/>
-从客户端到服务端的命令结构:<br/>
-使用率低，暂时不翻译
-
-#### createStream
-客户单发送此命令给服务器来为消息通信创建逻辑通道，如audio，video和metadata，都会在这个createstream命令创建的逻辑通道上来传输。<br/>
-<br/>
-从客户端到服务端的命令结构:<br/>
-使用率低，暂时不翻译
-
-#### createStream
-客户单发送此命令给服务器来为消息通信创建逻辑通道，如audio，video和metadata，都会在这个createstream命令创建的逻辑通道上来传输。<br/>
-<br/>
-从客户端到服务端的命令结构:<br/>
-使用率低，暂时不翻译
-
-#### createStream
-客户单发送此命令给服务器来为消息通信创建逻辑通道，如audio，video和metadata，都会在这个createstream命令创建的逻辑通道上来传输。<br/>
-<br/>
-从客户端到服务端的命令结构:<br/>
-使用率低，暂时不翻译
-
-#### createStream
-客户单发送此命令给服务器来为消息通信创建逻辑通道，如audio，video和metadata，都会在这个createstream命令创建的逻辑通道上来传输。<br/>
-<br/>
-从客户端到服务端的命令结构:<br/>
-使用率低，暂时不翻译
-
-#### createStream
-客户单发送此命令给服务器来为消息通信创建逻辑通道，如audio，video和metadata，都会在这个createstream命令创建的逻辑通道上来传输。<br/>
-<br/>
-从客户端到服务端的命令结构:<br/>
-使用率低，暂时不翻译
-
-#### createStream
-客户单发送此命令给服务器来为消息通信创建逻辑通道，如audio，video和metadata，都会在这个createstream命令创建的逻辑通道上来传输。<br/>
-<br/>
-从客户端到服务端的命令结构:<br/>
 使用率低，暂时不翻译
 
 #### createStream
