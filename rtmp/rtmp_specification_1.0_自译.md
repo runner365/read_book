@@ -155,6 +155,7 @@ chunk streamid 54-65599范围在3个字节的版本中编码。ID等于：第三
                Chunk basic header 3
 </pre>
 <br/>
+
 * cs id (6 bits):  这个字段包含chunk stream ID，值2-63。值0和1的是2或3字节的版本。
 * fmt (2 bits):  这个字段定义4中类型的chunk message header。这个chunk message header的类型介绍在下一节。
 * cs id - 64 (8 or 16 bits):  这个字段包含最小为64的chunk stream id。举例，ID 365就是一个1的cs id字段和16bit的301字段。
