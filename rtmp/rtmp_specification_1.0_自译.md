@@ -455,7 +455,7 @@ connect消息的交互流程图:
 #### 7.2.1.2 Call
 使用率低，暂时不翻译
 
-#### createStream
+#### 7.2.1.3 createStream
 客户单发送此命令给服务器来为消息通信创建逻辑通道，如audio，video和metadata，都会在这个createstream命令创建的逻辑通道上来传输。<br/>
 <br/>
 从客户端到服务端的命令结构:<br/>
