@@ -1,14 +1,12 @@
 <!-- TOC -->
 
-- [一点点从基础做起](#%E4%B8%80%E7%82%B9%E7%82%B9%E4%BB%8E%E5%9F%BA%E7%A1%80%E5%81%9A%E8%B5%B7)
-    - [1. webrtc方向](#1-webrtc%E6%96%B9%E5%90%91)
+    - [1. webrtc方向](#1-webrtc方向)
     - [1.1 RTP/RTCP](#11-rtprtcp)
-    - [1.1.1 英文自译](#111-%E8%8B%B1%E6%96%87%E8%87%AA%E8%AF%91)
-        - [1.1.1.1 RTP/RTC协议部分](#1111-rtprtc%E5%8D%8F%E8%AE%AE%E9%83%A8%E5%88%86)
-        - [1.1.1.2 RTP纠错方式](#1112-rtp%E7%BA%A0%E9%94%99%E6%96%B9%E5%BC%8F)
-    - [1.2 RTP H264](#12-rtp-h264)
-    - [1.2.1 英文自译](#121-%E8%8B%B1%E6%96%87%E8%87%AA%E8%AF%91)
-    - [1.3 QUIC](#13-quic)
+    - [1.1.1 英文自译](#111-英文自译)
+        - [1.1.1.1 RTP/RTC协议部分](#1111-rtprtc协议部分)
+        - [1.1.1.2 RTP纠错方式](#1112-rtp纠错方式)
+    - [1.2 RTP H264: rfc6184](#12-rtp-h264-rfc6184)
+- [2 QUIC](#2-quic)
 
 <!-- /TOC -->
 一点点从基础做起
@@ -44,11 +42,9 @@ webrtc的主要内容:<br/>
 * RTP纠错方式: NACK
 * RTP纠错方式:FEC(前向纠错)
 
-## 1.2 RTP H264
+## 1.2 RTP H264: rfc6184
 **RFC6184是RFC描述RTP协议如何承载H264**<br/>
 对于视频，主要承载的就是H264报文，rfc6184就显得非常的核心和重要。
-
-## 1.2.1 英文自译
 原文:[RFC6184.pdf](https://github.com/runner365/read_book/blob/master/RTP_H264/rfc6184.pdf)<br/>
 自译文档链接:[翻译: rfc6184-RTP Payload Format for H.264 Video](https://github.com/runner365/read_book/blob/master/RTP_H264/rfc6184%E8%87%AA%E8%AF%91.md)<br/>
 翻译主要内容:<br/>
@@ -59,7 +55,7 @@ webrtc的主要内容:<br/>
 
 对于STAP-B，MTAP，FU-B等，因为当前没有应用场景，在实际工作中用不到，因此不进行翻译。<br/>
 
-## 1.3 QUIC
+# 2 QUIC
 原文链接: [QUIC wire specification](https://docs.google.com/document/d/1WJvyZflAO2pq77yOLbp9NsGjC1CHetAXV8I0fQe-B_U/edit)<br/>
 自译文档连接: [QUIC协议自译](https://github.com/runner365/read_book/blob/master/Quic/Quic_Wire_layout_specification_%E8%87%AA%E8%AF%91.md)<br/>
 相关文档:
