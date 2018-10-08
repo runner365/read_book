@@ -29,10 +29,12 @@
         - [5.4.4 Window Acknowledgement Size(5)](#544-window-acknowledgement-size5)
         - [5.4.5 Set Peer Bandwidth(6)](#545-set-peer-bandwidth6)
 - [6. RTMP Message Formats](#6-rtmp-message-formats)
+    - [6.1 RTMP Message Format](#61-rtmp-message-format)
         - [6.1.1 Message Header](#611-message-header)
         - [6.1.2 Message Payload](#612-message-payload)
     - [6.2 User Control Message(4)](#62-user-control-message4)
 - [7. RTMP Command Messages](#7-rtmp-command-messages)
+    - [7.1 Messages的类型](#71-messages%E7%9A%84%E7%B1%BB%E5%9E%8B)
         - [7.1.1 Command Messages(20, 17)](#711-command-messages20-17)
         - [7.1.2 Data Message(18,15)](#712-data-message1815)
         - [7.1.3 Shared Object Message](#713-shared-object-message)
@@ -44,7 +46,7 @@
         - [7.2.1 NetConnection命令](#721-netconnection%E5%91%BD%E4%BB%A4)
             - [7.2.1. connect](#721-connect)
             - [7.2.1.2 Call](#7212-call)
-            - [createStream](#createstream)
+            - [7.2.1.3 createStream](#7213-createstream)
 
 <!-- /TOC -->
 # 5 RTMP Chunk Stream
@@ -357,6 +359,7 @@ sequence number (32 bits):  这个字段表示当前接收到的sequence number�
       Payload for the ‘Set Peer Bandwidth’ protocol message
 </pre>
 </br>
+
 Limit type是如下几种:<br/>
 * 0 - Hard: 对端应该限制出口带宽到window size。<br/>
 * 1 - Soft: 对端应该限制其出口带宽到消息中的window size，或限制效果更小的带宽。<br/>
@@ -366,7 +369,8 @@ Limit type是如下几种:<br/>
 # 6. RTMP Message Formats
 这部分定义了RTMP消息的格式，其在RTMP chunk steam上进行传输。<br/>
 当RTMP被设计来用RTMP chunk stream上来传输，它能用任何传输协议来传输。RTMP chunk stream和RTMP一起工作，是非常适合广泛的音视频应用的，点到点和点到多点的直播，VOD的点播业务，和互相交互的视频会议。<br/>
-<br/>
+
+## 6.1 RTMP Message Format
 服务端和客户端直接通过发送RTMP message来进行通信。消息包括音频，视频，数据和其他信息。<br/>
 <br/>
 RTMP消息有两部分: 头部和载体。
@@ -404,7 +408,10 @@ User Conntrol消息应该使用message stream ID 0(其是control stream) 和，�
 本节介绍服务器与客户端之间不同类型的消息和命令交互。<br/>
 <br/>
 在服务器与客户端之间交互消息的不同类型包括audio消息其承载音频数据，video消息其承载video数据，data消息承载用户信息数据，还有shared object消息和command消息。shared object消息提供方法为管理多个客户端和服务器之间的分发消息。Command消息承载AMF编码命令。客户端或服务器还可以发送RPC命令来进行交流。<br/>
-<br/>
+
+## 7.1 Messages的类型
+服务器和客户端通过网络发送消息来互相通信。消息类型能是很多种，包括音频消息，视频消息，命令消息，shared object消息，数据消息和user control消息。
+
 ### 7.1.1 Command Messages(20, 17)
 Command消息承载服务器与客户端之间的AMF编码消息。这些消息Message type 20表示AMF0格式，Message type 17是AMF3格式。这些消息被用来发送完成如connect, createStream, publish, play, pause on the peer。Command消息中如onstatus, result等，被用来通知发送者命令指示的结果和状态。命令消息有command name, transaction ID, 和command object其携带相关参数。客户端和服务器能也能通过流执行RPC命令，其用command message发送给对端。<br/>
 ### 7.1.2 Data Message(18,15)
