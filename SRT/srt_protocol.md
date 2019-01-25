@@ -17,7 +17,7 @@ SRT的机制在接收方新创建了重要的特性，极大的降低buffer的�
 ![srt网络情况](https://github.com/runner365/read_book/blob/srt/SRT/pic/net_condition02.png)
 
 最初SRT协议又Haivision Systems公司开发，在2017年4月Wowza Media Systems将其开源。开源的SRT遵守MPL-2.0开源协议。选用MPL-2.0协议，因为想在对开源SRT的兼容性，和估计开源社区去改进SRT协议之间做好平衡。任何第三方开发者都能自由的使用SRT开源代码。但是如果他们修改和优化代码，就必须把这些优化代码提交到开源社区。<br/>
-在2017年4月，Haivision和Wowza公司成立了SRT联盟(www.srtalliance.org)，致力于持续发展该协议。
+在2017年4月，Haivision和Wowza公司成立了SRT联盟www.srtalliance.org，致力于持续发展该协议。
 
 ## SRT的UDT4适配
 UDT是一种ARQ(自动重传请求)协议。其应用的是ARQ的第三种演进方案(选择性重传)。 UDT4的应用在ietf中提出，在draft-gg-udt-03中。<br/>
@@ -49,7 +49,7 @@ SRT保有UDT的UDP报文结构，但是有很多改进。基于UDT IETF internet
 SRT有两类报文，PH_SEQNO字段的第一个bit用来标识报文类型，0是数据报文，1是控制报文。如下的例子中，就是数据报文的例子，其'packet type' bit=0：<br/>
 注意：在SRT version 1.3中的报文结构变化。为了提高早期版本的适应能力，新旧报文格式都在下面列出(大字节序)。<br/>
 
-<pic>
+![srt_data_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_data_packet.png)
 
 * FF=(2bits) 如报文中的位置
 <pre>
@@ -73,9 +73,9 @@ SRT有两类报文，PH_SEQNO字段的第一个bit用来标识报文类型，0�
 更多数据报文的细节在本文后面介绍。 <br/>
 <br/>
 
-SRT协议控制报文头("packet type" bit=1)，其结构如下(未包含udp头)：
+SRT协议控制报文头("packet type" bit=1)，其结构如下(未包含udp头)：<br/>
 
-<pic>
+![srt_data_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_control_packet.png)
 
 对于控制报文，头两个字段分别解释如下：
 * 头32bit：
@@ -124,43 +124,45 @@ SRT协议控制报文头("packet type" bit=1)，其结构如下(未包含udp头)
 ### Handshake报文
 Handshake控制报文('packet type' bit=1) 是用来在两点之间建立连接的。早期的SRT用handshake来交换参数，在连接建立之后，但是1.3版本吧交换参数作为handshake的自身的一部分。后面的Handshake一节专门用来解释。<br/>
 
-<pic...>
+![srt_handshake_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_handshake_packet.png)
 
 ### KM 错误反馈报文
 Key Messge Error Response控制报文('packet type' bit=1)是用来交换错误状态消息。在加密一节中详细介绍。<br/>
 
-<pic...>
+![km_error_response](https://github.com/runner365/read_book/blob/srt/SRT/pic/KM_err_response.png)
 
 ### ACK报文
 ACK控制报文('packet type' bit=1) 是用来提供报文发送状态和RTT信息的。在SRT数据传输和控制一节中详细介绍。<br/>
 
-<pic...>
+![srt_ack_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_ack_packet.png)
 
 ### Keep-alive报文
-Keep-alive报文('packet type' bit=1) 是用来每10ms交换信息，来保证SRT流在连接断开后字段重连的。
+Keep-alive报文('packet type' bit=1) 是用来每10ms交换信息，来保证SRT流在连接断开后字段重连的。<br/>
 
-<pic...>
+![srt_keepalive_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_keepalive_packet.png)
 
 ### NAK控制报文
-NAK控制报文('packet type' bit=1) 是用来报告失败的报文传输。在SRT数据传输和控制一节中详细介绍。
+NAK控制报文('packet type' bit=1) 是用来报告失败的报文传输。在SRT数据传输和控制一节中详细介绍。<br/>
 
-<pic...>
+![srt_nak_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_nak_packet.png)
 
 ### SHUTDOWN控制报文
-shutdown控制报文('packet type' bit=1) 用来发器关闭SRT连接。
+shutdown控制报文('packet type' bit=1) 用来发器关闭SRT连接。<br/>
 
-<pic...>
+![srt_shutdown_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_shutdown_packet.png)
 
 ### ACKACK控制报文
-ACKACK控制报文('packet type' bit=1) 用来回复收到ACK报文，并且可以用来计算RTT。在SRT数据传输和控制一节中介绍。
+ACKACK控制报文('packet type' bit=1) 用来回复收到ACK报文，并且可以用来计算RTT。在SRT数据传输和控制一节中介绍。<br/>
 
-<pic...>
+![srt_ackack_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_ackack_packet.png)
 
 ### 扩展控制报文
-扩展控制报文('packet type' bit=1) 用来为原始UDT用户控制消息。它们被用在SRT扩展握手报文中，可以通过独立的消息，或内嵌在HANDSHAKE中。
+扩展控制报文('packet type' bit=1) 用来为原始UDT用户控制消息。它们被用在SRT扩展握手报文中，可以通过独立的消息，或内嵌在HANDSHAKE中。<br/>
+
+![srt_extend_ctrl](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_extended_ctrl_packet.png)
 
 ## SRT数据交互
 下表描述数据交互(包括控制数据)。注意，两点间角色的变换。举例，在会话过程中节点可以作为发起者，和监听者，然后也能成为发送和接受者在数据传输过程中。<br/>
 
-
+![srt_exchange_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_data_exchange.png)
 
