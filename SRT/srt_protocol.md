@@ -118,8 +118,49 @@ SRT协议控制报文头("packet type" bit=1)，其结构如下(未包含udp头)
 扩展消息机制是为未来的扩展，SRT可能因为某些原因今后会用到。后面的SRT扩展握手中会提及。
 * 第二个32bits：
 <pre>
-
+  1) Additional info -- 其在控制消息中被用作扩展空间字段。它的解析依赖于特殊消息类型，握手消息不使用它。
 </pre>
+
+### Handshake报文
+Handshake控制报文('packet type' bit=1) 是用来在两点之间建立连接的。早期的SRT用handshake来交换参数，在连接建立之后，但是1.3版本吧交换参数作为handshake的自身的一部分。后面的Handshake一节专门用来解释。<br/>
+
+<pic...>
+
+### KM 错误反馈报文
+Key Messge Error Response控制报文('packet type' bit=1)是用来交换错误状态消息。在加密一节中详细介绍。<br/>
+
+<pic...>
+
+### ACK报文
+ACK控制报文('packet type' bit=1) 是用来提供报文发送状态和RTT信息的。在SRT数据传输和控制一节中详细介绍。<br/>
+
+<pic...>
+
+### Keep-alive报文
+Keep-alive报文('packet type' bit=1) 是用来每10ms交换信息，来保证SRT流在连接断开后字段重连的。
+
+<pic...>
+
+### NAK控制报文
+NAK控制报文('packet type' bit=1) 是用来报告失败的报文传输。在SRT数据传输和控制一节中详细介绍。
+
+<pic...>
+
+### SHUTDOWN控制报文
+shutdown控制报文('packet type' bit=1) 用来发器关闭SRT连接。
+
+<pic...>
+
+### ACKACK控制报文
+ACKACK控制报文('packet type' bit=1) 用来回复收到ACK报文，并且可以用来计算RTT。在SRT数据传输和控制一节中介绍。
+
+<pic...>
+
+### 扩展控制报文
+扩展控制报文('packet type' bit=1) 用来为原始UDT用户控制消息。它们被用在SRT扩展握手报文中，可以通过独立的消息，或内嵌在HANDSHAKE中。
+
+## SRT数据交互
+下表描述数据交互(包括控制数据)。注意，两点间角色的变换。举例，在会话过程中节点可以作为发起者，和监听者，然后也能成为发送和接受者在数据传输过程中。<br/>
 
 
 
