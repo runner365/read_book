@@ -10,11 +10,11 @@ SRT在IP网络中的低延时视频传输，是以mpeg-ts格式作为UDP的单�
 即使UDT并不是为直播流而设计，但是其丢包恢复机制能提供基本的丢包恢复功能。SRT的最早版本包括新报文的重传功能，能对直播流的丢包做快速响应。<br/>
 为了达到低延时，SRT不得不引入分时机制。一个流在因特网中传输，很多特效会被完全影响，包括延时/jitter/丢包。进而导致解码问题，音视频解码器不能解码对应时间戳上的未收到的报文。如果应用buffer缓存来避免，但是却会带来延时。<br>
 
-<pic>
+[常规网络情况](https://github.com/runner365/read_book/blob/srt/SRT/pic/net_condition01.png)
 
 SRT的机制在接收方新创建了重要的特性，极大的降低buffer的需要。这些机制是SRT协议自身的一部分，所以一旦报文从SRT的一端发到接收端，流自身状态已经被恢复成流本身的状态。<br/>
 
-<pic>
+[srt网络情况](https://github.com/runner365/read_book/blob/srt/SRT/pic/net_condition02.png)
 
 最初SRT协议又Haivision Systems公司开发，在2017年4月Wowza Media Systems将其开源。开源的SRT遵守MPL-2.0开源协议。选用MPL-2.0协议，因为想在对开源SRT的兼容性，和估计开源社区去改进SRT协议之间做好平衡。任何第三方开发者都能自由的使用SRT开源代码。但是如果他们修改和优化代码，就必须把这些优化代码提交到开源社区。<br/>
 在2017年4月，Haivision和Wowza公司成立了SRT联盟(www.srtalliance.org)，致力于持续发展该协议。
