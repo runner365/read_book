@@ -166,3 +166,59 @@ ACKACK控制报文('packet type' bit=1) 用来回复收到ACK报文，并且可�
 
 ![srt_exchange_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_data_exchange.png)
 
+## SRT数据传输和控制
+本节介绍直播的音视频中，如何处理控制/数据报文的关键思想。
+
+### Buffers
+当应用(编码器)提供数据给srt来发送，它们被放入一个环状的发送buffer中。它们用seqid来编号。报文放在buffer中，直到收到对端的ack，万一它们会需要被重传。每个报文都有一个时间戳，其基于连接时间(其在handshake中定义，在第一个报文发送之前)。
+StartTime是应用创建SRT socket的时刻。报文时间戳是介于StartTime和报文被加到send buffer之间。
+
+<pic>
+
+注意：这里的时间是从左到右的，最新的报文在右边。<br/>
+接收者也有个一样的buffer。报文都放在buffer的队列中，直到旧的报文被上层应用获取。当配置的延时刚好到packet 2，那么packet 1就应该送个上次应用而出队了。<br/>
+
+<pic>
+
+时间戳是和连接关联的。传输并不是基于绝对时间。调度执行时间应该是基于实际时钟时间。时间的基准应该转换每个报文的时间戳到本地时钟时间。报文都是从发生方StartTime的便宜。任何时间相关参数都是基于本地StartTime来维护的，用来计算RTT，时间区和便宜，通过nanoseconds和其他。<br/>
+
+### Send Buffer Management
+发送队列(SndQ)是动态长度大小的，其包含了发送者buffer的内容相关多个引用。当发送队列有内容发送，相关引用信息就被加入到SndQ中。SndQ有多个buffers使用一个相同的channel(UDP socket)。<br/>
+下表显示出send buffer与SRT socket(CUDT)相关。SndQ包含socket引用，时间戳引用，本地索引信息(其是在SndQ中位置)。相关引用对象也是SndQ的对象的一部分。<br/>
+
+<pic>
+
+SndQ是双向链表，其有send buffer的CSnode的入口点。CSnode是SndQ类的一个对象(SndQ是哥队列，但是也有其他的类成员)。CSnode并不与buffer内容相关。它有指针指向它的socket，timestamp 和buffer中的位置(其被插入到SndQ的位置)。<br/>
+SndQ有个发送线程，其用来检查是否有报文要发送。基于在入口中包含的数据，它什么socket有报文ready可以被发送了。它检查时间戳引用，判断是否packet真的需要发送。如果没有，还把它放入list中。如果ready，线程就把他从list中移除掉。<br/>
+每次发送线程发送报文，发送线程会把报文重新插入list。它然后去查看send buffer中的下一个packet。packet的时间戳决定SndQ中插入的位置，其是按照timestamps排序的。<br/>
+控制报文是直接发送的。它们病不通过SndQ或发送队列。这个SndQ更新变量，为了追踪packet插入的位置，和那个packet是最后被对端ack的。<br/>
+
+### SRT Buffer延时
+发生者和接受者有大量的buffer，其在SRT程序代码中定义。在发送方，延时是时间，其是根据发送速率，SRT保存报文，直到给他时机发送，延时的影响对发送方比较小，如果ack晚到或没到，发送方只是按照上下文规定来丢弃。但是接收方的延时影响就明显很多。<br/>
+延时是用毫秒来定义的值，其可以用来计算成百上千的高速率。延时能被认为是一个窗口，窗口滑移是基于时间，基于一个时间来进行窗口的滑移。<br/>
+举例，在下表中，packet #2是最旧的报文，也是接受者队列的对头(packet #1已经被上层应用取走)。 <br/>
+延时窗口在队列中从左向右滑动。当packet #2移除窗口外，它就需要被上次应用取走(如去用作解码)。<br/>
+考虑到接收buffer存储一系列的packets。我们也就说我们定义延时，其是一个有6个报文长度的周期。延时能被认为是6个报文窗口长度。 <br/>
+在延时窗口中恢复报文的能力，依赖与传输的时间。延时窗口高效通过RTT决定什么报文能恢复，多少次被恢复。<br>
+
+<pic>
+
+在准确的时刻，接受者buffer释放第一个报文给上层应用。当延时窗口滑向下一个报文间隔，接受者释放第二个报文给上层应用，以此类推。<br/>
+现在我们看一下如果packet没有收到(packet#4)会发生什么。当延时窗口滑动，packet就应该可以上送给上层应用，但是该packet不存在。这就会导致跳到下个packet。其不会被恢复，那么它也将被移出丢弃list，并且永不会在要求重传。 <br/>
+
+<pic>
+
+滑移延时窗口可以被认为是一个区间，SRT能在区间内恢复大部分的packet。<br/>
+另外一方面，发送者的buffer也有一个延时窗口。当时间流逝，最旧的报文就会移出延时窗口，永不会被恢复。因为即使它们再次被发送，它们将到达接收方太晚，而不能成功被接受者处理。<br/>
+如果延时滑动窗口移除过期报文，其嗨没有被成功发送的(接收方没有ack成功)，太晚而不用再去发送它们了。因为它们会在接受者的发送窗口之外--即使它们后面到达，它们也会被丢弃。所以这些报文应该被移除到发送buffer外。<br/>
+接收方和发送方应该有相同的延时值是非常重要的，以便协调packet的及时到达和丢弃。在早期SRT版本中，发送方把延时参数放在发送给接受者的handshake中。如果接受者上配置的延时参数较大，它会把这个延时参数放在packet中，发送response给发送方。在SRT 1.3版本后，双方都能在handshake的中立刻配置(不需要进一步的resoponse)。<br/>
+当一个packet已经发送但是没有收到ack并且超时，这个packet就被移出发生方的延时窗口。它曾是发送者buffer的延时窗口，但是ackpos不会前移(在最后一个packet被ack确认其被收到，ACKPOS节点会指向下个packet)。当延时窗口前移并最旧的packet移出窗口，这个packet就可以被移除。SndQ的清理是手动的移动ACKPOS到延时窗口的下个packet。<br/>
+所有再发送buffer的packets有保留的位置，其带有配置的长度(7个188字节，也就是1316，在加上udt头)。有很多发送buffer，每个都包含连续按顺序排列的packet。一个发送buffer是一个环形队列，开始和结束节点可以在任何节点，但是不会重合。协议保留sequence信息(基于ACK)。在传送过程中，所有packet的seq number能达到更高的数字，实际buffer位置不能达到的。发送者的buffer使用位置来计算。一个在buffer中的item都有一个开始节点start position(STARTPOS)。发送buffer中的positon和packet中的sequence是可以互相转化的，因为两者都是同时增长。 <br/>
+
+### SRT Sockets, Send List & Channel
+考虑到socket 1 和 2， 每个都有自己的发送buffer。SndQ包含一个packets的列表来发送。有一个线程来持续检查这个发送buffer。当一个报文可以被发送，一个CSnode被创建，其确认一个报文的socket，和在SndQ中一个相关的对象，SndQ讲指向发送队列尾部。<br/>
+
+<pic>
+
+每个packet都有timestamp，依赖timestamp来确定何时发送。SndQ列表是用timestamp来排列的。如果发送线程决定socket 1发送bufer有报文ready，它就把packet放入SndQ的队列中。如果SndQ队列是空，packet就被放在队列头，并带上自己的时间戳，其决定报文什么时候该被处理。<br/>
+socket 2的发送buffer也能被加到SndQ中。发送线程将向buffer中要packet发送，线程会根据速率来计算packet的发送间隔。<br/>
