@@ -173,12 +173,12 @@ ACKACK控制报文('packet type' bit=1) 用来回复收到ACK报文，并且可�
 当应用(编码器)提供数据给srt来发送，它们被放入一个环状的发送buffer中。它们用seqid来编号。报文放在buffer中，直到收到对端的ack，万一它们会需要被重传。每个报文都有一个时间戳，其基于连接时间(其在handshake中定义，在第一个报文发送之前)。
 StartTime是应用创建SRT socket的时刻。报文时间戳是介于StartTime和报文被加到send buffer之间。
 
-<pic>
+![starttime](https://github.com/runner365/read_book/blob/srt/SRT/pic/starttime.png)
 
 注意：这里的时间是从左到右的，最新的报文在右边。<br/>
 接收者也有个一样的buffer。报文都放在buffer的队列中，直到旧的报文被上层应用获取。当配置的延时刚好到packet 2，那么packet 1就应该送个上次应用而出队了。<br/>
 
-<pic>
+![starttime](https://github.com/runner365/read_book/blob/srt/SRT/pic/receive_buffer.png)
 
 时间戳是和连接关联的。传输并不是基于绝对时间。调度执行时间应该是基于实际时钟时间。时间的基准应该转换每个报文的时间戳到本地时钟时间。报文都是从发生方StartTime的便宜。任何时间相关参数都是基于本地StartTime来维护的，用来计算RTT，时间区和便宜，通过nanoseconds和其他。<br/>
 
@@ -186,7 +186,7 @@ StartTime是应用创建SRT socket的时刻。报文时间戳是介于StartTime�
 发送队列(SndQ)是动态长度大小的，其包含了发送者buffer的内容相关多个引用。当发送队列有内容发送，相关引用信息就被加入到SndQ中。SndQ有多个buffers使用一个相同的channel(UDP socket)。<br/>
 下表显示出send buffer与SRT socket(CUDT)相关。SndQ包含socket引用，时间戳引用，本地索引信息(其是在SndQ中位置)。相关引用对象也是SndQ的对象的一部分。<br/>
 
-<pic>
+![sndq_info](https://github.com/runner365/read_book/blob/srt/SRT/pic/SndQ_Info.png)
 
 SndQ是双向链表，其有send buffer的CSnode的入口点。CSnode是SndQ类的一个对象(SndQ是哥队列，但是也有其他的类成员)。CSnode并不与buffer内容相关。它有指针指向它的socket，timestamp 和buffer中的位置(其被插入到SndQ的位置)。<br/>
 SndQ有个发送线程，其用来检查是否有报文要发送。基于在入口中包含的数据，它什么socket有报文ready可以被发送了。它检查时间戳引用，判断是否packet真的需要发送。如果没有，还把它放入list中。如果ready，线程就把他从list中移除掉。<br/>
@@ -201,12 +201,12 @@ SndQ有个发送线程，其用来检查是否有报文要发送。基于在入�
 考虑到接收buffer存储一系列的packets。我们也就说我们定义延时，其是一个有6个报文长度的周期。延时能被认为是6个报文窗口长度。 <br/>
 在延时窗口中恢复报文的能力，依赖与传输的时间。延时窗口高效通过RTT决定什么报文能恢复，多少次被恢复。<br>
 
-<pic>
+![rcv_buffer_latency](https://github.com/runner365/read_book/blob/srt/SRT/pic/rcv_buffer_latency.png)
 
 在准确的时刻，接受者buffer释放第一个报文给上层应用。当延时窗口滑向下一个报文间隔，接受者释放第二个报文给上层应用，以此类推。<br/>
 现在我们看一下如果packet没有收到(packet#4)会发生什么。当延时窗口滑动，packet就应该可以上送给上层应用，但是该packet不存在。这就会导致跳到下个packet。其不会被恢复，那么它也将被移出丢弃list，并且永不会在要求重传。 <br/>
 
-<pic>
+![rcv_retrans_latency](https://github.com/runner365/read_book/blob/srt/SRT/pic/rcv_retrans_latency.png)
 
 滑移延时窗口可以被认为是一个区间，SRT能在区间内恢复大部分的packet。<br/>
 另外一方面，发送者的buffer也有一个延时窗口。当时间流逝，最旧的报文就会移出延时窗口，永不会被恢复。因为即使它们再次被发送，它们将到达接收方太晚，而不能成功被接受者处理。<br/>
