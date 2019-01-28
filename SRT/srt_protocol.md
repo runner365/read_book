@@ -206,7 +206,7 @@ SndQ有个发送线程，其用来检查是否有报文要发送。基于在入�
 在准确的时刻，接受者buffer释放第一个报文给上层应用。当延时窗口滑向下一个报文间隔，接受者释放第二个报文给上层应用，以此类推。<br/>
 现在我们看一下如果packet没有收到(packet#4)会发生什么。当延时窗口滑动，packet就应该可以上送给上层应用，但是该packet不存在。这就会导致跳到下个packet。其不会被恢复，那么它也将被移出丢弃list，并且永不会在要求重传。 <br/>
 
-![rcv_retrans_latency](https://github.com/runner365/read_book/blob/srt/SRT/pic/rcv_retrans_latency.png)
+![rcv_latency_drop](https://github.com/runner365/read_book/blob/srt/SRT/pic/rcv_latency_drop.png)
 
 滑移延时窗口可以被认为是一个区间，SRT能在区间内恢复大部分的packet。<br/>
 另外一方面，发送者的buffer也有一个延时窗口。当时间流逝，最旧的报文就会移出延时窗口，永不会被恢复。因为即使它们再次被发送，它们将到达接收方太晚，而不能成功被接受者处理。<br/>
@@ -218,7 +218,9 @@ SndQ有个发送线程，其用来检查是否有报文要发送。基于在入�
 ### SRT Sockets, Send List & Channel
 考虑到socket 1 和 2， 每个都有自己的发送buffer。SndQ包含一个packets的列表来发送。有一个线程来持续检查这个发送buffer。当一个报文可以被发送，一个CSnode被创建，其确认一个报文的socket，和在SndQ中一个相关的对象，SndQ讲指向发送队列尾部。<br/>
 
-<pic>
+![srt_socket_bufferlist_1](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_socket_bufferlist_1.png)
 
 每个packet都有timestamp，依赖timestamp来确定何时发送。SndQ列表是用timestamp来排列的。如果发送线程决定socket 1发送bufer有报文ready，它就把packet放入SndQ的队列中。如果SndQ队列是空，packet就被放在队列头，并带上自己的时间戳，其决定报文什么时候该被处理。<br/>
 socket 2的发送buffer也能被加到SndQ中。发送线程将向buffer中要packet发送，线程会根据速率来计算packet的发送间隔。<br/>
+
+![srt_socket_bufferlist_2](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_socket_bufferlist_2.png)
