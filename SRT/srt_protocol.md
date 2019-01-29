@@ -224,3 +224,16 @@ SndQ有个发送线程，其用来检查是否有报文要发送。基于在入�
 socket 2的发送buffer也能被加到SndQ中。发送线程将向buffer中要packet发送，线程会根据速率来计算packet的发送间隔。<br/>
 
 ![srt_socket_bufferlist_2](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_socket_bufferlist_2.png)
+
+<br/>
+带有包间隔的时间戳决定packet重新插入SndQ的位置(在从socket1 buffer的packet之前，或之后)。<br/>
+SndQ决定从哪个SRT socket去取下一个packet来发送。send buffer和socket绑定，而SndQ却是跟channle更加相关。几个socket都发送到同一目的地，所以它们是多路复用的。<br/>
+当packet被加到socket，SndQ也会被更新。当一个packet已经可以被发送，其也被基于时间戳重新插入到SndQ中的正确位置。<br/>
+这个处理过程在SndQ中发生。对每个packet报文，有一个线程去检查是否该发送。如果没有，就什么也不错。否则，线程要求SRT socket把这个packet发送到channel。在SndQ的条目有SRT socket的引用。<br/>
+当一个packet被写到send buffer，它也被加入到SndQ中，其也通过CSnode来确保其不会产生重复的条目项。SndQ重复的移除条目项，并同时插入新的packet到正确的位置上。<br/>
+在不同SRT socket的packet的时间戳是本地的，其定义的时间是发送时对比当前时间。在packet加入到SndQ的时刻，他的时间戳对比当前的时间决定其在SndQ中的位置。<br/>
+Send buffer的操作和SndQ的操作是分离的。packet被加入到buffer，且然后SndQ被通知有packet需要发送。它们各自有自己的行为。<br/>
+send buffer的内容会被加入到应用线程中(sender线程)。然后有另外一个线程和SndQ互动，其通过输入buffer的速率负责控制packet间隔。输出是通过buffer中的packet间隔来调整控制。<br/>
+
+### Packet Acknowledgement(ACKs)
+在确定的间隔(与ACKs, ACKACKs 和 Round Trip Time相关)，接收方发送ACK给发送方，使得发送方把收到ack的packet从sender buffer中移除，其再buffer中的空间点将被回收。ACK包含了packet的sequence number，其是刚最新收到报文的seq+1。当没有报文丢失的情况下，ack返回的seq应该是n+1(n是接收到的packet的seq number)。<br/>
