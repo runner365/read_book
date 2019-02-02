@@ -239,18 +239,18 @@ send buffer的内容会被加入到应用线程中(sender线程)。然后有另�
 在确定的间隔(与ACKs, ACKACKs 和 Round Trip Time相关)，接收方发送ACK给发送方，使得发送方把收到ack的packet从sender buffer中移除，其在buffer中的空间点将被回收。ACK包含了packet的sequence number，其是刚最新收到报文的seq+1。当没有报文丢失的情况下，ack返回的seq应该是n+1(n是接收到的packet的seq number)。<br/>
 举例，如果接受者发送packet 6的ACK(如下)，意味着比这个sequence数小的报文都收到了，能从发送者的buffer中移除。<br/>
 
-<pic>
+![srt_ack](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_ACK.png)
 
 在丢失的案例中，ACK(seq)就是丢失列表中的第一个报文，其就是最新收到报文的seq+1。<br/>
 
 ### Packet Retransmission (NAKs)
 如果packet 4到达了接受者的buffer，但是packet 3并没有到达，NAK报文就需要发送给发送着。NAK被加到一个列表(周期的NAK报告)，其周期的发送给发送方，以此避免NAK报文本身传输中丢失或延迟到达。<br/>
 
-<pic/>
+![srt_nak](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_NAKs.png)
 
 如果packet 2到达，但是packet 3没有，那么当packet 4到达后，NAK就应该按照规则发送来发起要求重传。<br/>
 
-<pic/>
+![srt_nak2](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_NAK2.png)
 
 ### Packet Acknowledgment in SRT
 UDT草案定义周期发送的NAK控制报文，其包含一个丢失报文的列表。UDT4应用去使能这个特性，而用定时重传的方法来代替。NAK的发送仅仅发生在一个丢失报文被检测到(也就是下一个报文都收到了，但是上一个报文未能收到)。如果NAK本身丢失，ACK会阻塞在这个packet，同时阻止发送更多的报文给接收端直到丢弃list为空。在发送方，因为如果没收到NAK报文，丢失的报文也不会被加入到丢失list中去，并会影响到没有收到ACK报文的重传。<br/>
