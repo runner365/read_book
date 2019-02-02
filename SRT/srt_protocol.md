@@ -276,3 +276,35 @@ Periodic NAK Reports在UDT4的源码中被去使能了。这个特性在SRT1.1.0
 SRT的Periodic NAK Reports是基于RTT/2为周期，最小20ms(UDT设定是300ms)。一个NAK控制报文含有一个丢失报文的压缩列表。所以，仅仅丢失的报文会被重传。通过使用RTT/2作为NAK报告的周期，这会导致丢失报文可能会被重传一次以上，但是这样会保持低延时在NAK报文丢失的情况下。
 
 ### Too-Late-Packet-Drop: 报文太晚丢弃
+这个特性在SRT1.0.5中开始有，允许发送端丢弃报文，如果其没有机会及时发送。在SRT发送端，如果Too-Late-Packet-Drop使能，报文的时间戳比SRT最大延时的125%还要大，就会被认为太晚而不用在发送了，会被编码器丢弃。IFrame尾部的报文就有可能被丢弃。<br/>
+接收者(SRT>=1.1.0)可以不让使能发送端的包丢弃，来防止发送端的产生bug。发送端(srt>-1.1.0)会保留报文至少1000ms，如果SRT的最大延时小于1000ms(对最大的RTT不够的话)。
+在接收端，大IFrame的尾部可能晚到，并且不会被SRT接收buffer缓冲到。接受buffer耗尽，如果有发现丢包发生，就没有时间可以重传。丢失的报文被接收者忽略。
+
+### Bidirectional Transmission Queues：双向传输队列
+SRT也支持这样的场景，接收者也有自己的发送队列，发送着也有相应的接受队列，支持双向通信。<br/>
+这是很有用的，能支持标准点到点的SRT会话，两端都有发送/接受buffer。发送端的Tx buffer对应接收端的Rx buffer，而接收端的Tx buffer对应发送端的Rx buffer。和普通单方向的会话一样，Tx/RX的延时相互匹配。<br/>
+在handshake报文中，发送端提供自己的Tx latency和假想对端的latency(接收端的Tx buffer值)。接收端也响应回复对应的参数。提议的latency值是在单个RTT周期内，双方评估的结果(尽量选择大一点的值)。<br/>
+
+<pic>
+
+### ACKs, ACKACKs & Round Trip Time
+Round Trip Time(RTT)是时间的度量，表示报文一个来回的耗时。SRT不能测量单方向的耗时，所以只能用RTT/2来表示单方向耗时。一个ACK(从接收方)会触发ACKACK(从发送方)的发送，几乎不带其他延时。ACK的发送时间与对应ACKACK收到时间的差值就是RTT。<br/>
+
+<pic>
+
+ACKACK告诉接收者停止发送对应便宜点的ACK，因为发送端已经知道接收端收到了。否则，ACK(带有过时信息)将被持续的周期发送。类似的，如果发送端没有收到ACK，它自己也会周期发送没有收到ACK的packet。<br/>
+有两种情况发送ACK。一个full ACK是基于10ms(ACK周期)发送。对于高bitrate的传输，一种"light ACK"就能被发送，期是多个packet的一个sequence。在10ms的间隔里，经常有大量packet的发送和接收，以至于发送端ACK的偏移点不能够快的移动。为了减轻这个问题，在收到64packets后(即使ACK发送周期还没到)，发送端发送一个light ACK。
+
+<pic>
+
+ACK动作像ping报文，而ACKACK像ping back回复，以此可以度量出RTT。每个ACK都有一个数值，而ACKACK也有相同的一个数值。接收方有一个ACK的列表去匹配ACKACK。不像full ACK报文(包含当前的RTT和多个其他的控制信息参数)，light ACK包含sequence数值(如下表所示)。在接收端，所有控制消息被直接发送和处理，但是ACKACK的处理时间是微不足道的(因为它的处理时间被包括在RTT里面)。<br/>
+RTT是在接收端被计算出来的，并且发送下一个full ACK。注意，第一个ACK包含的RTT值默认是100ms，因为早期的计算可能不准确。<br/>
+
+<pic>
+
+发送端永远都是通过接收端获取到RTT。没有一个方法来模拟ACK/ACKACK机制(举例，不可能发送一个消息，这个消息不处理而立刻返回)。
+
+### Dirft Management: 偏移管理
+当发送方进入“连接”状态，它就告诉上层应用有个socket interface接口已经ready可以发送了。在这个时间的，应用可以开始发送数据packet了。它以一定的输入速率把packet加入到SRT发送方的buffer，通过这个buffer，packet以规定的时间发送到接收者。<br/>
+同步的时间是需要来保证，接收者/发送者buffer的登记，需要考虑到时间轴和RTT。考虑到加/减RTT，和可能的不同步的系统时间，一个都能认同的时间基准，每分钟约几个微秒的偏移。这样的偏移累积起来可能需要几天才能让发送/接收的buffer耗尽或溢出，从而严重影响视频质量。SRT有时间管理机制来补偿这个偏移量。<br/>
+当packet收到后，SRT能得出packet timestamp和期望timestamp之间的差值。时间戳timestamp的计算实在接收方进行。RTT告诉接收方报文要消耗多少时间。SRT在发送者buffer的延时窗口的边缘和接收者对应时间之间维护一个引用。这样能允许基于本地事件实时的能调度事件。 <br/>
