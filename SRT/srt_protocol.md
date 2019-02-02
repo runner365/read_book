@@ -10,11 +10,11 @@ SRT在IP网络中的低延时视频传输，是以mpeg-ts格式作为UDP的单�
 即使UDT并不是为直播流而设计，但是其丢包恢复机制能提供基本的丢包恢复功能。SRT的最早版本包括新报文的重传功能，能对直播流的丢包做快速响应。<br/>
 为了达到低延时，SRT不得不引入分时机制。一个流在因特网中传输，很多特效会被完全影响，包括延时/jitter/丢包。进而导致解码问题，音视频解码器不能解码对应时间戳上的未收到的报文。如果应用buffer缓存来避免，但是却会带来延时。<br>
 
-![常规网络情况](https://github.com/runner365/read_book/blob/srt/SRT/pic/net_condition01.png)
+![常规网络情况](https://github.com/runner365/read_book/blob/master/SRT/pic/net_condition01.png)
 
 SRT的机制在接收方新创建了重要的特性，极大的降低buffer的需要。这些机制是SRT协议自身的一部分，所以一旦报文从SRT的一端发到接收端，流自身状态已经被恢复成流本身的状态。<br/>
 
-![srt网络情况](https://github.com/runner365/read_book/blob/srt/SRT/pic/net_condition02.png)
+![srt网络情况](https://github.com/runner365/read_book/blob/master/SRT/pic/net_condition02.png)
 
 最初SRT协议又Haivision Systems公司开发，在2017年4月Wowza Media Systems将其开源。开源的SRT遵守MPL-2.0开源协议。选用MPL-2.0协议，因为想在对开源SRT的兼容性，和估计开源社区去改进SRT协议之间做好平衡。任何第三方开发者都能自由的使用SRT开源代码。但是如果他们修改和优化代码，就必须把这些优化代码提交到开源社区。<br/>
 在2017年4月，Haivision和Wowza公司成立了SRT联盟www.srtalliance.org，致力于持续发展该协议。
@@ -49,7 +49,7 @@ SRT保有UDT的UDP报文结构，但是有很多改进。基于UDT IETF internet
 SRT有两类报文，PH_SEQNO字段的第一个bit用来标识报文类型，0是数据报文，1是控制报文。如下的例子中，就是数据报文的例子，其'packet type' bit=0：<br/>
 注意：在SRT version 1.3中的报文结构变化。为了提高早期版本的适应能力，新旧报文格式都在下面列出(大字节序)。<br/>
 
-![srt_data_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_data_packet.png)
+![srt_data_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_data_packet.png)
 
 * FF=(2bits) 如报文中的位置
 <pre>
@@ -75,7 +75,7 @@ SRT有两类报文，PH_SEQNO字段的第一个bit用来标识报文类型，0�
 
 SRT协议控制报文头("packet type" bit=1)，其结构如下(未包含udp头)：<br/>
 
-![srt_data_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_control_packet.png)
+![srt_data_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_control_packet.png)
 
 对于控制报文，头两个字段分别解释如下：
 * 头32bit：
@@ -124,47 +124,47 @@ SRT协议控制报文头("packet type" bit=1)，其结构如下(未包含udp头)
 ### Handshake报文
 Handshake控制报文('packet type' bit=1) 是用来在两点之间建立连接的。早期的SRT用handshake来交换参数，在连接建立之后，但是1.3版本吧交换参数作为handshake的自身的一部分。后面的Handshake一节专门用来解释。<br/>
 
-![srt_handshake_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_handshake_packet.png)
+![srt_handshake_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_handshake_packet.png)
 
 ### KM 错误反馈报文
 Key Messge Error Response控制报文('packet type' bit=1)是用来交换错误状态消息。在加密一节中详细介绍。<br/>
 
-![km_error_response](https://github.com/runner365/read_book/blob/srt/SRT/pic/KM_err_response.png)
+![km_error_response](https://github.com/runner365/read_book/blob/master/SRT/pic/KM_err_response.png)
 
 ### ACK报文
 ACK控制报文('packet type' bit=1) 是用来提供报文发送状态和RTT信息的。在SRT数据传输和控制一节中详细介绍。<br/>
 
-![srt_ack_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_ack_packet.png)
+![srt_ack_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_ack_packet.png)
 
 ### Keep-alive报文
 Keep-alive报文('packet type' bit=1) 是用来每10ms交换信息，来保证SRT流在连接断开后字段重连的。<br/>
 
-![srt_keepalive_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_keepalive_packet.png)
+![srt_keepalive_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_keepalive_packet.png)
 
 ### NAK控制报文
 NAK控制报文('packet type' bit=1) 是用来报告失败的报文传输。在SRT数据传输和控制一节中详细介绍。<br/>
 
-![srt_nak_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_nak_packet.png)
+![srt_nak_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_nak_packet.png)
 
 ### SHUTDOWN控制报文
 shutdown控制报文('packet type' bit=1) 用来发器关闭SRT连接。<br/>
 
-![srt_shutdown_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_shutdown_packet.png)
+![srt_shutdown_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_shutdown_packet.png)
 
 ### ACKACK控制报文
 ACKACK控制报文('packet type' bit=1) 用来回复收到ACK报文，并且可以用来计算RTT。在SRT数据传输和控制一节中介绍。<br/>
 
-![srt_ackack_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_ackack_packet.png)
+![srt_ackack_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_ackack_packet.png)
 
 ### 扩展控制报文
 扩展控制报文('packet type' bit=1) 用来为原始UDT用户控制消息。它们被用在SRT扩展握手报文中，可以通过独立的消息，或内嵌在HANDSHAKE中。<br/>
 
-![srt_extend_ctrl](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_extended_ctrl_packet.png)
+![srt_extend_ctrl](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_extended_ctrl_packet.png)
 
 ## SRT数据交互
 下表描述数据交互(包括控制数据)。注意，两点间角色的变换。举例，在会话过程中节点可以作为发起者，和监听者，然后也能成为发送和接受者在数据传输过程中。<br/>
 
-![srt_exchange_packet](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_data_exchange.png)
+![srt_exchange_packet](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_data_exchange.png)
 
 ## SRT数据传输和控制
 本节介绍直播的音视频中，如何处理控制/数据报文的关键思想。
@@ -173,12 +173,12 @@ ACKACK控制报文('packet type' bit=1) 用来回复收到ACK报文，并且可�
 当应用(编码器)提供数据给srt来发送，它们被放入一个环状的发送buffer中。它们用seqid来编号。报文放在buffer中，直到收到对端的ack，万一它们会需要被重传。每个报文都有一个时间戳，其基于连接时间(其在handshake中定义，在第一个报文发送之前)。
 StartTime是应用创建SRT socket的时刻。报文时间戳是介于StartTime和报文被加到send buffer之间。
 
-![starttime](https://github.com/runner365/read_book/blob/srt/SRT/pic/starttime.png)
+![starttime](https://github.com/runner365/read_book/blob/master/SRT/pic/starttime.png)
 
 注意：这里的时间是从左到右的，最新的报文在右边。<br/>
 接收者也有个一样的buffer。报文都放在buffer的队列中，直到旧的报文被上层应用获取。当配置的延时刚好到packet 2，那么packet 1就应该送个上次应用而出队了。<br/>
 
-![starttime](https://github.com/runner365/read_book/blob/srt/SRT/pic/receive_buffer.png)
+![starttime](https://github.com/runner365/read_book/blob/master/SRT/pic/receive_buffer.png)
 
 时间戳是和连接关联的。传输并不是基于绝对时间。调度执行时间应该是基于实际时钟时间。时间的基准应该转换每个报文的时间戳到本地时钟时间。报文都是从发生方StartTime的便宜。任何时间相关参数都是基于本地StartTime来维护的，用来计算RTT，时间区和便宜，通过nanoseconds和其他。<br/>
 
@@ -186,7 +186,7 @@ StartTime是应用创建SRT socket的时刻。报文时间戳是介于StartTime�
 发送队列(SndQ)是动态长度大小的，其包含了发送者buffer的内容相关多个引用。当发送队列有内容发送，相关引用信息就被加入到SndQ中。SndQ有多个buffers使用一个相同的channel(UDP socket)。<br/>
 下表显示出send buffer与SRT socket(CUDT)相关。SndQ包含socket引用，时间戳引用，本地索引信息(其是在SndQ中位置)。相关引用对象也是SndQ的对象的一部分。<br/>
 
-![sndq_info](https://github.com/runner365/read_book/blob/srt/SRT/pic/SndQ_Info.png)
+![sndq_info](https://github.com/runner365/read_book/blob/master/SRT/pic/SndQ_Info.png)
 
 SndQ是双向链表，其有send buffer的CSnode的入口点。CSnode是SndQ类的一个对象(SndQ是哥队列，但是也有其他的类成员)。CSnode并不与buffer内容相关。它有指针指向它的socket，timestamp 和buffer中的位置(其被插入到SndQ的位置)。<br/>
 SndQ有个发送线程，其用来检查是否有报文要发送。基于在入口中包含的数据，它什么socket有报文ready可以被发送了。它检查时间戳引用，判断是否packet真的需要发送。如果没有，还把它放入list中。如果ready，线程就把他从list中移除掉。<br/>
@@ -201,12 +201,12 @@ SndQ有个发送线程，其用来检查是否有报文要发送。基于在入�
 考虑到接收buffer存储一系列的packets。我们也就说我们定义延时，其是一个有6个报文长度的周期。延时能被认为是6个报文窗口长度。 <br/>
 在延时窗口中恢复报文的能力，依赖与传输的时间。延时窗口高效通过RTT决定什么报文能恢复，多少次被恢复。<br>
 
-![rcv_buffer_latency](https://github.com/runner365/read_book/blob/srt/SRT/pic/rcv_buffer_latency.png)
+![rcv_buffer_latency](https://github.com/runner365/read_book/blob/master/SRT/pic/rcv_buffer_latency.png)
 
 在准确的时刻，接受者buffer释放第一个报文给上层应用。当延时窗口滑向下一个报文间隔，接受者释放第二个报文给上层应用，以此类推。<br/>
 现在我们看一下如果packet没有收到(packet#4)会发生什么。当延时窗口滑动，packet就应该可以上送给上层应用，但是该packet不存在。这就会导致跳到下个packet。其不会被恢复，那么它也将被移出丢弃list，并且永不会在要求重传。 <br/>
 
-![rcv_latency_drop](https://github.com/runner365/read_book/blob/srt/SRT/pic/rcv_latency_drop.png)
+![rcv_latency_drop](https://github.com/runner365/read_book/blob/master/SRT/pic/rcv_latency_drop.png)
 
 滑移延时窗口可以被认为是一个区间，SRT能在区间内恢复大部分的packet。<br/>
 另外一方面，发送者的buffer也有一个延时窗口。当时间流逝，最旧的报文就会移出延时窗口，永不会被恢复。因为即使它们再次被发送，它们将到达接收方太晚，而不能成功被接受者处理。<br/>
@@ -218,12 +218,12 @@ SndQ有个发送线程，其用来检查是否有报文要发送。基于在入�
 ### SRT Sockets, Send List & Channel
 考虑到socket 1 和 2， 每个都有自己的发送buffer。SndQ包含一个packets的列表来发送。有一个线程来持续检查这个发送buffer。当一个报文可以被发送，一个CSnode被创建，其确认一个报文的socket，和在SndQ中一个相关的对象，SndQ讲指向发送队列尾部。<br/>
 
-![srt_socket_bufferlist_1](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_socket_bufferlist_1.png)
+![srt_socket_bufferlist_1](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_socket_bufferlist_1.png)
 
 每个packet都有timestamp，依赖timestamp来确定何时发送。SndQ列表是用timestamp来排列的。如果发送线程决定socket 1发送bufer有报文ready，它就把packet放入SndQ的队列中。如果SndQ队列是空，packet就被放在队列头，并带上自己的时间戳，其决定报文什么时候该被处理。<br/>
 socket 2的发送buffer也能被加到SndQ中。发送线程将向buffer中要packet发送，线程会根据速率来计算packet的发送间隔。<br/>
 
-![srt_socket_bufferlist_2](https://github.com/runner365/read_book/blob/srt/SRT/pic/srt_socket_bufferlist_2.png)
+![srt_socket_bufferlist_2](https://github.com/runner365/read_book/blob/master/SRT/pic/srt_socket_bufferlist_2.png)
 
 <br/>
 带有包间隔的时间戳决定packet重新插入SndQ的位置(在从socket1 buffer的packet之前，或之后)。<br/>
