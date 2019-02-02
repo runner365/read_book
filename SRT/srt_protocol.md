@@ -236,4 +236,43 @@ Send buffer的操作和SndQ的操作是分离的。packet被加入到buffer，�
 send buffer的内容会被加入到应用线程中(sender线程)。然后有另外一个线程和SndQ互动，其通过输入buffer的速率负责控制packet间隔。输出是通过buffer中的packet间隔来调整控制。<br/>
 
 ### Packet Acknowledgement(ACKs)
-在确定的间隔(与ACKs, ACKACKs 和 Round Trip Time相关)，接收方发送ACK给发送方，使得发送方把收到ack的packet从sender buffer中移除，其再buffer中的空间点将被回收。ACK包含了packet的sequence number，其是刚最新收到报文的seq+1。当没有报文丢失的情况下，ack返回的seq应该是n+1(n是接收到的packet的seq number)。<br/>
+在确定的间隔(与ACKs, ACKACKs 和 Round Trip Time相关)，接收方发送ACK给发送方，使得发送方把收到ack的packet从sender buffer中移除，其在buffer中的空间点将被回收。ACK包含了packet的sequence number，其是刚最新收到报文的seq+1。当没有报文丢失的情况下，ack返回的seq应该是n+1(n是接收到的packet的seq number)。<br/>
+举例，如果接受者发送packet 6的ACK(如下)，意味着比这个sequence数小的报文都收到了，能从发送者的buffer中移除。<br/>
+
+<pic>
+
+在丢失的案例中，ACK(seq)就是丢失列表中的第一个报文，其就是最新收到报文的seq+1。<br/>
+
+### Packet Retransmission (NAKs)
+如果packet 4到达了接受者的buffer，但是packet 3并没有到达，NAK报文就需要发送给发送着。NAK被加到一个列表(周期的NAK报告)，其周期的发送给发送方，以此避免NAK报文本身传输中丢失或延迟到达。<br/>
+
+<pic/>
+
+如果packet 2到达，但是packet 3没有，那么当packet 4到达后，NAK就应该按照规则发送来发起要求重传。<br/>
+
+<pic/>
+
+### Packet Acknowledgment in SRT
+UDT草案定义周期发送的NAK控制报文，其包含一个丢失报文的列表。UDT4应用去使能这个特性，而用定时重传的方法来代替。NAK的发送仅仅发生在一个丢失报文被检测到(也就是下一个报文都收到了，但是上一个报文未能收到)。如果NAK本身丢失，ACK会阻塞在这个packet，同时阻止发送更多的报文给接收端直到丢弃list为空。在发送方，因为如果没收到NAK报文，丢失的报文也不会被加入到丢失list中去，并会影响到没有收到ACK报文的重传。<br/>
+UDT处理拥塞的方法是通过阻止重传直到丢失列表为空，这个做法基本上是错的。因为重传丢失列表报文优先会很大可能阻塞住接收方。<br/>
+在SRT接下来的修改中(举例NAK周期发送，基于时间戳的发送，太晚报文丢弃等等)，会降低ACK-timeout重传的发生。<br/>
+
+### Timestamp-based Packet Delivery(TsbPD)
+这个特性是使用UDT packet头中的timestamp。早期的SRT TsbPD设计是想复制编码器的输出，来作为解码器的输入。这个设计没有考虑到传输的瓶颈，报文传输越快，丢失的报文重传也就越快，避免了低延时。但是SRT协议是基于网络带宽受限的情况下开发的，能占有网络没有任何限制。<br/>
+另外一个问题是原始SRT TsbPd的设计是基于CPU限制的。ts packet的时间戳是基于系统能产生和标识packet的时间戳。如果接收者没有同样的CPU容量，也就不能复制发送者的模式。<br/>
+SRT的当前版本，TsbPD允许接受者以相同的速率发送packet报文给接收者，其速率是SRT发送者编码器的发送速率。基本上，在接收者把收到的报文上送给应用前，发送者在报文中的时间戳会被调整成接收者的本地时间(补偿时间偏移或不同的时间轴)。packet能被SRT基于配置的接收者延时来保有。更高的延时能容忍更大的报文丢失发生率，或更大的报文丢失突发率。接收到的报文在它们被play后再丢弃掉。<br/>
+packet的timestamp(微秒)是关联到SRT的连接建立时间。原始的UDT 编码用packet 发送时间来作为packet的timestamp。对于TsbPD特性来说，是不正确的，因为如果一个新的时间(当前的发送时间)用来重传报文，会导致乱序，因为按时间把重传报文插入到队列中。报文应该基于sequence number来插入。<br/>
+当一个packet在应用把packet报文放入SRT的原始时间(微秒)就是packet的timestamp。TsbPD特性用这个时间来作为packet第一次发送的timestamp，和接下来任何时间重传报文的timestamp。时间戳和配置的延时控制控制恢复buffer和实时发送到对方的packet。<br/>
+UDT协议本身并不使用packet timestamp，所以这个修改对UDT协议并不影响，也不会影响到当前已存在的拥塞控制方法。<br/>
+
+### Fast Retransmit：快速重传
+原始的UDT4未确认ack的报文重传是基于超时机制，这样对于实时数据并不友好。只要在loss list中还有报文，没有收到ack的报文就不会被重传。因为丢失报文的重传是并发发生的，当重传定时器到超时时刻，会开始一波并发事件，其会影响到实时数据(拥塞窗口，发送者buffer慢，丢包等等)。<br/>
+快速重传在拥塞窗口满之前，通过重传没有收到ACK的报文来解决这个问题。发送着把在合理时间内没有收到ACK的报文都放入loss list中，合理的时间基于RTT和丢弃报文的timestamp。<br/>
+快速重传机制，减少了接收者buffer size，和延时。其也让丢包数量变量变化更平滑，对比于拥塞窗口满时的重传。然而，这个特性也是对带宽非常饥渴的。SRT发生者的这个特性是与SRT1.0接收者可以互通配合的。当有了周期的NAK报告后，这个特性就很少用了，或仅仅作为看门狗。<br/>
+
+### Periodic NAK Reports：周期发送NAK
+SRT1.0在报文丢包率大于2%后是非常不高效的。很多报文重传都不止一次，其实都没有完全确认清楚该报文是否真的丢失。造成的情况是，带宽的瓶颈和延时无法承受这样丢包率造成的重传。<br/>
+Periodic NAK Reports在UDT4的源码中被去使能了。这个特性在SRT1.1.0的接收者中被重新开启，用来提高SRT适应高丢包环境，和所有的丢包环境。因为重传带宽的超出，这样的应用会造成大概两倍的丢包率。对于SRT配置参数的限制内，10%的抗丢包是可以达到的。<br/>
+SRT的Periodic NAK Reports是基于RTT/2为周期，最小20ms(UDT设定是300ms)。一个NAK控制报文含有一个丢失报文的压缩列表。所以，仅仅丢失的报文会被重传。通过使用RTT/2作为NAK报告的周期，这会导致丢失报文可能会被重传一次以上，但是这样会保持低延时在NAK报文丢失的情况下。
+
+### Too-Late-Packet-Drop: 报文太晚丢弃
