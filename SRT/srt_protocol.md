@@ -285,22 +285,22 @@ SRT也支持这样的场景，接收者也有自己的发送队列，发送着�
 这是很有用的，能支持标准点到点的SRT会话，两端都有发送/接受buffer。发送端的Tx buffer对应接收端的Rx buffer，而接收端的Tx buffer对应发送端的Rx buffer。和普通单方向的会话一样，Tx/RX的延时相互匹配。<br/>
 在handshake报文中，发送端提供自己的Tx latency和假想对端的latency(接收端的Tx buffer值)。接收端也响应回复对应的参数。提议的latency值是在单个RTT周期内，双方评估的结果(尽量选择大一点的值)。<br/>
 
-<pic>
+![bidirectional trans queue](https://github.com/runner365/read_book/blob/master/SRT/pic/bidirectional_trans_queue.png)
 
 ### ACKs, ACKACKs & Round Trip Time
 Round Trip Time(RTT)是时间的度量，表示报文一个来回的耗时。SRT不能测量单方向的耗时，所以只能用RTT/2来表示单方向耗时。一个ACK(从接收方)会触发ACKACK(从发送方)的发送，几乎不带其他延时。ACK的发送时间与对应ACKACK收到时间的差值就是RTT。<br/>
 
-<pic>
+![acks send](https://github.com/runner365/read_book/blob/master/SRT/pic/ACK_send.png)
 
 ACKACK告诉接收者停止发送对应便宜点的ACK，因为发送端已经知道接收端收到了。否则，ACK(带有过时信息)将被持续的周期发送。类似的，如果发送端没有收到ACK，它自己也会周期发送没有收到ACK的packet。<br/>
 有两种情况发送ACK。一个full ACK是基于10ms(ACK周期)发送。对于高bitrate的传输，一种"light ACK"就能被发送，期是多个packet的一个sequence。在10ms的间隔里，经常有大量packet的发送和接收，以至于发送端ACK的偏移点不能够快的移动。为了减轻这个问题，在收到64packets后(即使ACK发送周期还没到)，发送端发送一个light ACK。
 
-<pic>
+![ackack send](https://github.com/runner365/read_book/blob/master/SRT/pic/ackack_send.png)
 
 ACK动作像ping报文，而ACKACK像ping back回复，以此可以度量出RTT。每个ACK都有一个数值，而ACKACK也有相同的一个数值。接收方有一个ACK的列表去匹配ACKACK。不像full ACK报文(包含当前的RTT和多个其他的控制信息参数)，light ACK包含sequence数值(如下表所示)。在接收端，所有控制消息被直接发送和处理，但是ACKACK的处理时间是微不足道的(因为它的处理时间被包括在RTT里面)。<br/>
 RTT是在接收端被计算出来的，并且发送下一个full ACK。注意，第一个ACK包含的RTT值默认是100ms，因为早期的计算可能不准确。<br/>
 
-<pic>
+![ack_ackack_formats](https://github.com/runner365/read_book/blob/master/SRT/pic/ack_ackack_formats.png)
 
 发送端永远都是通过接收端获取到RTT。没有一个方法来模拟ACK/ACKACK机制(举例，不可能发送一个消息，这个消息不处理而立刻返回)。
 
