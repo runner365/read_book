@@ -307,4 +307,24 @@ RTT是在接收端被计算出来的，并且发送下一个full ACK。注意，
 ### Dirft Management: 偏移管理
 当发送方进入“连接”状态，它就告诉上层应用有个socket interface接口已经ready可以发送了。在这个时间的，应用可以开始发送数据packet了。它以一定的输入速率把packet加入到SRT发送方的buffer，通过这个buffer，packet以规定的时间发送到接收者。<br/>
 同步的时间是需要来保证，接收者/发送者buffer的登记，需要考虑到时间轴和RTT。考虑到加/减RTT，和可能的不同步的系统时间，一个都能认同的时间基准，每分钟约几个微秒的偏移。这样的偏移累积起来可能需要几天才能让发送/接收的buffer耗尽或溢出，从而严重影响视频质量。SRT有时间管理机制来补偿这个偏移量。<br/>
-当packet收到后，SRT能得出packet timestamp和期望timestamp之间的差值。时间戳timestamp的计算实在接收方进行。RTT告诉接收方报文要消耗多少时间。SRT在发送者buffer的延时窗口的边缘和接收者对应时间之间维护一个引用。这样能允许基于本地事件实时的能调度事件。 <br/>
+当packet收到后，SRT能得出packet timestamp和期望timestamp之间的差值。时间戳timestamp的计算是在接收方进行。RTT告诉接收方报文要消耗多少时间。SRT在发送者buffer的延时窗口的边缘时间和接收者对应时间之间维护一个参数。这样能允许基于本地时间实时的能调度事件。 <br/>
+接收者采样时间偏移数据，和周期的计算packet timestamp纠正参数，两者就能用来对每个收到的data packet来调整报文间隔。<br/>
+当一个packet收到后，不能马上上送上层应用。当时间推移，接收者就能算出丢失报文预计的时间，并且可以用这些信息去用特殊报文来填补这些“丢包的空洞”。<br/>
+接收者用本地时间去调度事件---举例，去决定是否现在上送一个packet。每个packet里的timestamp都与会话开始时候有个差值。当收到一个packet(packet内带有发送方的timestamp)，接收者就用本地时间与会话开始时间之间的差值，来重新计算packet的timestamp。start time就是会话开始时的本地时间。packet timestamp就等于当前时间减去start time(packet_timestamp=now-start_time)，start time就是socket的创建时刻。<br/>
+
+### Loss List
+发送方通过NAK报告来建立lost packe list。当调度到发送，先看lost list中是否有报文需要发送，有的话先发送lost list中的。否则，就发送SndQ list中的。注意，当packet发送后，仍旧在buffer中保留以免对方没有收到。<br/>
+收到NAK报文后，就把其中的报文放入lost list。当延时窗口前移，packet将被移出send queue，需要检查一下是否丢弃或重传的packet在lost list中，以此来决定是否把这些报文移出lost list，因为它们没有必要再重传。在send queue和lost list的操作是通过ACKPOS决定。<br/>
+
+<pic>
+
+当ACKPOS前移到一个点，所有比这个点旧的packet都可以被移出send queue。<br/>
+
+<pic>
+
+当接收者遇到遇到这种情况，下一个应该被play的packet没有收到，它就应该跳过这个packet，并且发送一个fake ACK。对于发送端，fake ACK就是真的ACK，也就是说发送端就认为这个packet真的被成功接收了。这个方法有利于帮助发送者和接收者之间的同步。实际上packet的丢失对于发送端是不知道的。跳过这个报文在接收端的统计statistics中有记录。<br/>
+当发送端收到NAK packet。也有个packet的计数器。如果packet没有对应的ACK，它就在lost list中保留，有可能被多次发送。在lost list中的packet优先级更高一些。<br/>
+如果在lost list中的packet持续的阻塞住send queue，在一些情况下就会造成send queue被填满。当send queue满了，发送端首先就丢弃packet而不是发送它们。编码器(或上层应用)可能持续的生成packet，但是send queue没有空间放入，所以packet会被直接丢弃。SRT本身不对未发送报文敏感的，其也不会在SRT statistics中显示。<br/>
+这种packet上层丢弃的情况几乎不会发生。放在send buffer中packet的数量是基于配置延时参数的。旧的packet，没有机会再被重传或被play的，会被丢弃，为上层应用的新报文留空间。当低延时配置被配置，最小一秒的延时是被使能的。一秒的限制是来源于MPEG I-frame用SRT传输的情况。IFrame是比较大的(通常8倍于其他packet)，需要更多的时间来发送。其太大而不能在延时窗口中保留，可能会造成queue中的报文丢弃。为了避免这种情况，SRT应用在丢弃packet前，最少有1秒等等(或延时变量值)。这就可以当应用最小延时变量，仍可以应用到IFrame中。<br/>
+
+### SRT Packet Pacing: SRT按速率发送packet
