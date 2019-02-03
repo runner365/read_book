@@ -316,11 +316,11 @@ RTT是在接收端被计算出来的，并且发送下一个full ACK。注意，
 发送方通过NAK报告来建立lost packe list。当调度到发送，先看lost list中是否有报文需要发送，有的话先发送lost list中的。否则，就发送SndQ list中的。注意，当packet发送后，仍旧在buffer中保留以免对方没有收到。<br/>
 收到NAK报文后，就把其中的报文放入lost list。当延时窗口前移，packet将被移出send queue，需要检查一下是否丢弃或重传的packet在lost list中，以此来决定是否把这些报文移出lost list，因为它们没有必要再重传。在send queue和lost list的操作是通过ACKPOS决定。<br/>
 
-<pic>
+![ack_pos1](https://github.com/runner365/read_book/blob/master/SRT/pic/ACKPOS1.png)
 
 当ACKPOS前移到一个点，所有比这个点旧的packet都可以被移出send queue。<br/>
 
-<pic>
+![ack_pos2](https://github.com/runner365/read_book/blob/master/SRT/pic/ACKPOS2.png)
 
 当接收者遇到遇到这种情况，下一个应该被play的packet没有收到，它就应该跳过这个packet，并且发送一个fake ACK。对于发送端，fake ACK就是真的ACK，也就是说发送端就认为这个packet真的被成功接收了。这个方法有利于帮助发送者和接收者之间的同步。实际上packet的丢失对于发送端是不知道的。跳过这个报文在接收端的统计statistics中有记录。<br/>
 当发送端收到NAK packet。也有个packet的计数器。如果packet没有对应的ACK，它就在lost list中保留，有可能被多次发送。在lost list中的packet优先级更高一些。<br/>
