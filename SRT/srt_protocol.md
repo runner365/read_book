@@ -334,35 +334,38 @@ UDT用最大带宽设置来控制packet输出速率。这个statics设定对于�
 一个提议的解决方案是，让SRT把编码器的input rate配置，和测量实际input rate，使用这两者的中最大值。<br/>
 输出是通过控制packet周期(两个packet之间的间隔)。对于一个指定的bitrate，SRT计算出一个packet的平均大小。packet的间隔是通过比较持续packet中的timestamp来定义。packet的输出是通过packet size和间隔来调度。<br/>
 
-<pic>
+![packet_pacing_interval](https://github.com/runner365/read_book/blob/master/SRT/pic/packet_pacing_interval.png)
 
 传输速度是通过packet之间的定时器来控制的。在老的代码中，packet周期是通过拥塞控制模块来调整的。基于从网络的反馈，packet间隔可以突然减小来加速，或突然增加来减速。但是这在SRT的直播模式中并不适合。音视频流bitrate是在mpegts packet形成，修改出口packet pace病不能影响到接收方单个的流rate--它会影响到解码。早期SRT是在一个周期里，输出rate与输入input相当。默认情况下，SRT测量input流的bitrate，根据这个来调整packet period。 <br/>
 SRT需要一个确定的足够带宽(比预想的带宽略高)，为了有空间插入更多的重发packet，而不影响SRT发送者的主流输出速度太多而导致packet不能正确发送。唯一的办法是通过network的反馈来降低拥塞，来控制编码器的输出(SRT的输入)。不太可能对已经打包到预想bitrate的packet进行调整，因为这个预设定的速度已经是解码器想要的速度了。<br/>
 这里有3个配置项：INPUTBW, MAXBW 和 OVERHEAD(%)。 <br/>
+
+![maxbw_inputbw_overhead](https://github.com/runner365/read_book/blob/master/SRT/pic/maxbw_inputbw_overhead.png)
+
 设置输入带宽(INPUTBW)参数为0，意味着用内部测量值(smpinpbw)来设置packet周期，同时与output的overhead最大配置配合来完成。<br/>
 一个绝对的最大带宽(MAXBW)能被配置成一个能力极限值。设定MAXBW为0的话，就是只用INPUTBW来调整输出。<br/>
 这里有个情况是SRT需要考虑的。问题就是测量输入带宽的方法有一个延后问题，这个测量是平均值。所以如果输入速率突然降为0(举例，因为可能会有黑屏在视频流中)，测量结果就会掉入低值的rate。但是当视频速率突然增长，input rate就突然增长。SRT的输出速率就会落后于编码器的输入速率。报文就会累计在SRT发送者的buffer中，因为SRT要花时间来测量速度。如果packet太晚输出，就会导致问题。<br/>
 
-<pic>
+![SRT_blackscreen](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_blackscreen.png)
 
 为了解决这个问题，SRT的发送方的输出是通过视频编码器的速率来配置的。因为可能通过编码器配置的bitrate来配置SRT的bitrate，任何修改都能被直接copy到SRT的配置中。这个是全局的。
 
-<pic>
+![sender_encoder](https://github.com/runner365/read_book/blob/master/SRT/pic/sender_encoder.png)
 
 如下表所示，SRT的发送者bitrate因为黑屏而降低，但是不会一直降低。 <br/>
 
-<pic>
+![SRT_blackscreen2](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_blackscreen2.png)
 
 但是这个解决方案有它自己的弱点。在低bitrate，SRT从编码器来的输入速率经常会超过预先配置的bitrate。因为SRT发送方的输出是基于配置编码器的bitrate来调整，输入突然过高会导致packet再send buffer中的堆积。buffer的堆积比packet的发送更快。但是SRT输出还会依赖配置的速度，但是被累积的packet不得不超时发送。它们会在buffer中累计，不会即使的输出，最后导致一些packet会被发送过晚。<br/>
 
-<pic>
+![SRT_packet_pacing_loss_retransmission](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_packet_pacing_loss_retransmission.png)
 
 图中橘黄色线以上表示，基于延时需要利用overhead space进行重传的pakets。橘黄色线表示的区域是丢失packet的数量。这些packet不得不加入到图表的上部，实时直播流不得不一直维护这些信息。<br/>
 基于这个原则，packet之间的空间决定重传packet在什么地方插入，overhead代表可以提供的边界。有个经验的计算，定义packet之间的间隔从而得出输出bitrate。它是负载的功能(负载包含音频/视频)。<br/>
 SRT尝试基于解码器输出来重新定义发送者的输入带宽，重发packet是透明的，就好像它们从来没被重传过。当到达一个临界点，但是一旦packet pacing下降，有很大的累积在send buffer。它突然变满，并且不能足够快的清空，到某个时间点packet就开始丢包。 <br/>
 SRT版本1.3合并了两种packet pacing的方法。输入rate的检测，但是如果其掉速太多，SRT发送者输出的配置bitrate是公认的。如果测量低于配置速率，它并不遵循测量速率(如果完全没有packet发送，SRT就不发送)。然而，如果编码器输入速率大于配置速率，它就遵循编码器配置速率，越快越去遵循。绑定这两种方法来克服各自的问题。<br/>
 
-<pic>
+![SRT_packet_pacing_loss_retransmission2](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_packet_pacing_loss_retransmission2.png)
 
 理论上，带宽能力是带宽overhead的值。如果有太多packdet而不能发出，SRT不能发出。但是带宽能力的机制不能正常工作。带宽限制就被轻易的击溃。<br/>
 另外一个SRT版本1.3的变化，是加了一个配置option，叫OUTPACEMODE，其使能其他pacing项的组合。设置MAXBW模式就是以绝对带宽容量值，其并不随编码器的输入而波动。设置MAXBW为0，意味着使用INPUTBW。相反的，设置INPUTBW为0意味着完全使用内部测量值。<br/>
@@ -372,4 +375,4 @@ SRT packet pacing总结如下。默认，直播模式下的输出rate是基于�
 ### Packet Probes
 当SRT用很多技术方法在流控上，但有很多限制在于无法准确的计算链路的带宽容量。这里的Packet probe技术是没16个packet报文间隔发送一次“packet probe”其没有报文间隔的延时。如果这两个连着的packet到达接收者是有间隔的，意味着网络有影响的背景流量，其也意味着足够的网络带宽有所下降。这也帮助去测量网络带宽能力。但是在packet之间的空间的计算是无法控制的，也就是说足够的带宽量是很难定义出来的。<br/>
 
-<pic>
+![SRT_PacketProbes](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_PacketProbes.png)
