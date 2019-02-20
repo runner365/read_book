@@ -374,6 +374,6 @@ SRT 1.3版本用这些技术的捆绑来作为配置输入，而不是只用测�
 SRT packet pacing总结如下。默认，直播模式下的输出rate是基于输入rate的(也就是流的输出)。输入rate(sendmsg API)是内部测量到的，输出rate是动态调整的，包括配置overhead(25%)，其被加到重传packet的迸发rate中。
 
 ### Packet Probes
-当SRT用很多技术方法在流控上，但有很多限制在于无法准确的计算链路的带宽容量。这里的Packet probe技术是没16个packet报文间隔发送一次“packet probe”其没有报文间隔的延时。如果这两个连着的packet到达接收者是有间隔的，意味着网络有影响的背景流量，其也意味着足够的网络带宽有所下降。这也帮助去测量网络带宽能力。但是在packet之间的空间的计算是无法控制的，也就是说足够的带宽量是很难定义出来的。<br/>
+当SRT用很多技术方法在流控上，但有很多限制在于无法准确的计算链路的带宽容量。这里的Packet probe技术是每16个packet报文间隔发送一次“packet probe”其没有报文间隔的延时。如果这两个连着的packet到达接收者是有间隔的，意味着网络有影响的背景流量，其也意味着足够的网络带宽有所下降。这也帮助去测量网络带宽能力。但是在packet之间的空间的计算是无法控制的，也就是说足够的带宽量是很难定义出来的。<br/>
 
 ![SRT_PacketProbes](https://github.com/runner365/read_book/blob/master/SRT/pic/SRT_PacketProbes.png)
