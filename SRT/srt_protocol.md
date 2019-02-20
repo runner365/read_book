@@ -181,7 +181,7 @@ StartTime是应用创建SRT socket的时刻。报文时间戳是介于StartTime�
 
 ![starttime](https://github.com/runner365/read_book/blob/master/SRT/pic/receive_buffer.png)
 
-时间戳是和连接关联的。传输并不是基于绝对时间。调度执行时间应该是基于实际时钟时间。时间的基准应该转换每个报文的时间戳到本地时钟时间。报文都是从发生方StartTime的便宜。任何时间相关参数都是基于本地StartTime来维护的，用来计算RTT，时间区和便宜，通过nanoseconds和其他。<br/>
+时间戳是和连接关联的。传输并不是基于绝对时间。调度执行时间应该是基于实际时钟时间。时间的基准应该转换每个报文的时间戳到本地时钟时间。报文都是从发生方StartTime的便宜。任何时间相关参数都是基于本地StartTime来维护的，用来计算RTT，时间区和偏移，通过nanoseconds和其他。<br/>
 
 ### Send Buffer Management
 发送队列(SndQ)是动态长度大小的，其包含了发送者buffer的内容相关多个引用。当发送队列有内容发送，相关引用信息就被加入到SndQ中。SndQ有多个buffers使用一个相同的channel(UDP socket)。<br/>
