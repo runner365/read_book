@@ -80,11 +80,15 @@ bool QuicClientBase::Initialize() {
 </code>
 </pre>
 
-*  bool Connect(); //连接quic server，包括 同步加密密钥，和handshake
+*  bool Connect(); 
+//连接quic server，包括 同步加密密钥，和handshake <br/>
 会调用StartConnect() <br/>
 
-* void QuicClientBase::StartConnect(); //连接quic server，包括 同步加密密钥，和handshake; 
-创建QuicPacketWriter；创建QuicConnection(其最为QuecSession的成员对象)；创建QuicSession； <br/>
+* void QuicClientBase::StartConnect(); 
+//连接quic server，包括 同步加密密钥，和handshake; <br/>
+创建QuicPacketWriter；<br/>
+创建QuicSession；<br/>
+创建QuicConnection(其最为QuecSession的成员对象)； <br/>
 <pre>
 <code>
 void QuicClientBase::StartConnect() {
@@ -108,3 +112,114 @@ void QuicClientBase::StartConnect() {
 </code>
 </pre>
 <br/>
+
+* void QuicClientBase::InitializeSession()
+  // Calls session()->Initialize(). Subclasses may override this if any extra <br/>
+  // initialization needs to be done. Subclasses should expect that session() <br/>
+  // is non-null and valid. <br/>
+<pre>
+<code>
+void QuicClientBase::InitializeSession() {
+  session()->Initialize();
+}
+</code>
+</pre>
+<br/>
+quic session初始化，可能被继承覆盖，如果需要做更多工作的话。<br/>
+
+### 2.2 QuicSpdyClientBase的关键信息
+QuicSpdyClientBase继承QuicClientBase，和QuicClientPushPromiseIndex::Delegate， QuicSpdyStream::Visitor<br/>
+#### 2.2.1 关键成员
+<pre>
+<code>
+  // Keeps track of any data that must be resent upon a subsequent successful
+  // connection, in case the client receives a stateless reject.
+  std::vector<std::unique_ptr<QuicDataToResend>> data_to_resend_on_connect_;
+
+  std::unique_ptr<ClientQuicDataToResend> push_promise_data_to_resend_;
+</code>
+</pre>
+<br/>
+
+#### 2.2.2 关键成员函数
+* std::unique_ptr<QuicSession> QuicSpdyClientBase::CreateQuicClientSession;
+CreateQuicClientSession是基类QuicClientBase中的纯虚函数.<br/>
+创建QuicSpdyClientSession类对象，需要输入connection对象等。<br/>
+<pre>
+<code>
+std::unique_ptr<QuicSession> QuicSpdyClientBase::CreateQuicClientSession(
+    const quic::ParsedQuicVersionVector& supported_versions,
+    QuicConnection* connection) {
+  return QuicMakeUnique<QuicSpdyClientSession>(
+      *config(), supported_versions, connection, server_id(), crypto_config(),
+      &push_promise_index_);
+}
+</code>
+</pre>
+<br/>
+*   void SendRequest(const spdy::SpdyHeaderBlock& headers, QuicStringPiece body, bool fin);
+发送http request的报文，headers是http的头部额外信息，body是http的body信息；<br/>
+创建Quic client stream类对象，通过其发送. <br/>
+<pre>
+<code>
+void QuicSpdyClientBase::SendRequest(const SpdyHeaderBlock& headers,
+                                     QuicStringPiece body,
+                                     bool fin) {
+  //设置重传的部分代码
+  ......
+  QuicSpdyClientStream* stream = CreateClientStream(); //创建QuicSpdyClientStream类对象
+  if (stream == nullptr) {
+    QUIC_BUG << "stream creation failed!";
+    return;
+  }
+  stream->SendRequest(headers.Clone(), body, fin);//通过QuicSpdyClientStream的SendRequest发送信息
+  //记录重传信息
+  .....
+}
+</code>
+</pre>
+<br/>
+
+*   void SendRequestAndWaitForResponse(const spdy::SpdyHeaderBlock& headers,QuicStringPiece body,bool fin);
+// Sends an HTTP request and waits for response before returning.
+发送http request后，通过WaitForEvents做异步等待返回！<br/>
+WaitForEvents依靠基类QuicClientBase中的实现完成：network_helper_->RunEventLoop();
+<pre>
+<code>
+void QuicSpdyClientBase::SendRequestAndWaitForResponse(
+    const SpdyHeaderBlock& headers,
+    QuicStringPiece body,
+    bool fin) {
+  SendRequest(headers, body, fin);
+  while (WaitForEvents()) {
+  }
+}
+</code>
+</pre>
+<br/>
+
+*  QuicSpdyClientStream* CreateClientStream();
+创建一个QuicSpdyClientStream类对象<br/>
+<pre>
+<code>
+std::unique_ptr<QuicSpdyClientStream>
+QuicSpdyClientSession::CreateClientStream() {
+  return QuicMakeUnique<QuicSpdyClientStream>(
+      GetNextOutgoingBidirectionalStreamId(), this, BIDIRECTIONAL);
+}
+</code>
+</pre>
+<br/>
+
+### 2.3 QuicClient
+QuicClient继承QuicSpdyClientBase<br/>
+#### 2.3.1 关键成员
+基本都是继承基类的成员变量. <br/>
+
+#### 2.3.1 关键成员函数
+* std::unique_ptr<QuicSession> CreateQuicClientSession(const ParsedQuicVersionVector& supported_versions, QuicConnection* connection) override;
+继承和覆盖基类的CreateQuicClientSession函数。<br/>
+通过输入，QuicConnection和ParsedQuicVersionVector来进行创建quic session。<br/>
+在基类QuicSpdyClientBase中的CreateQuicClientSession返回的对象是QuicSpdyClientSession。<br/>
+在基类QuicClientBase中CreateQuicClientSession是一个纯虚函数<br/>
+
