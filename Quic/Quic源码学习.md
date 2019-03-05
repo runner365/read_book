@@ -233,8 +233,10 @@ QuicClient继承QuicSpdyClientBase<br/>
 
 ### 3. Quic Session相关代码
 * QuicSpdyClientSession <br/>
+代码路径: net/third_party/quic/core/http <br/>
 class QuicSpdyClientSession : public QuicSpdyClientSessionBase <br/>
-* QuicSpdyClientSessionBase <br/>
+* QuicSpdyClientSessionBase  <br/>
+代码路径: net/third_party/quic/core/http <br/>
 <pre>
 <code>
   class QUIC_EXPORT_PRIVATE QuicSpdyClientSessionBase
@@ -242,7 +244,8 @@ class QuicSpdyClientSession : public QuicSpdyClientSessionBase <br/>
       public QuicCryptoClientStream::ProofHandler
 </code>
 </pre><br/>
-* QuicSpdySession
+* QuicSpdySession <br/>
+代码路径: net/third_party/quic/core/http <br/>
 <pre>
 <code>
 class QUIC_EXPORT_PRIVATE QuicSpdySession
@@ -253,7 +256,8 @@ class QUIC_EXPORT_PRIVATE QuicSpdySession
       public QpackDecoderStreamSender::Delegate
 </code>
 </pre><br/>
-* QuicSession
+* QuicSession<br/>
+代码路径: net/third_party/quic/core<br/>
 <pre>
 <code>
 class QUIC_EXPORT_PRIVATE QuicSession : public QuicConnectionVisitorInterface,
@@ -262,6 +266,6 @@ class QUIC_EXPORT_PRIVATE QuicSession : public QuicConnectionVisitorInterface,
 </code>
 </pre><br/>
 
-### 3.1 QuicSpdyClientSessionBase
+### 3.1 QuicSession
 #### 3.1.1 类成员变量
 * 
