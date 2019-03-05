@@ -202,10 +202,18 @@ void QuicSpdyClientBase::SendRequestAndWaitForResponse(
 创建一个QuicSpdyClientStream类对象<br/>
 <pre>
 <code>
-std::unique_ptr< QuicSpdyClientStream>
-QuicSpdyClientSession::CreateClientStream() {
-  return QuicMakeUnique< QuicSpdyClientStream>(
-      GetNextOutgoingBidirectionalStreamId(), this, BIDIRECTIONAL);
+QuicSpdyClientStream* QuicSpdyClientBase::CreateClientStream() {
+  if (!connected()) {
+    return nullptr;
+  }
+
+  auto* stream = static_cast< QuicSpdyClientStream*>(
+      client_session()->CreateOutgoingBidirectionalStream());
+  if (stream) {
+    stream->SetPriority(QuicStream::kDefaultPriority);
+    stream->set_visitor(this);
+  }
+  return stream;
 }
 </code>
 </pre>
