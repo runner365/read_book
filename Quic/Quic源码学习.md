@@ -41,14 +41,14 @@ QuicSpdyClientBase 派生于 QuicClientBase, QuicClientPushPromiseIndex::Delegat
   QuicCryptoClientConfig crypto_config_; //quic加密配置
 
   // Writer used to actually send packets to the wire. Must outlive |session_|.
-  std::unique_ptr<QuicPacketWriter> writer_; //用于发送报文的接口
+  std::unique_ptr< QuicPacketWriter> writer_; //用于发送报文的接口
 
   // Session which manages streams.
-  std::unique_ptr<QuicSession> session_; //QuicSession是管理quic stream的会话类
+  std::unique_ptr< QuicSession> session_; //QuicSession是管理quic stream的会话类
 
   // The network helper used to create sockets and manage the event loop.
   // Not owned by this class.
-  std::unique_ptr<NetworkHelper> network_helper_; //网络事件监听的event loop机制，也就是epoll的收发事件
+  std::unique_ptr< NetworkHelper> network_helper_; //网络事件监听的event loop机制，也就是epoll的收发事件
 </code>
 </pre>
 
@@ -134,9 +134,9 @@ QuicSpdyClientBase继承QuicClientBase，和QuicClientPushPromiseIndex::Delegate
 <code>
   // Keeps track of any data that must be resent upon a subsequent successful
   // connection, in case the client receives a stateless reject.
-  std::vector<std::unique_ptr<QuicDataToResend>> data_to_resend_on_connect_;
+  std::vector< std::unique_ptr< QuicDataToResend>> data_to_resend_on_connect_;
 
-  std::unique_ptr<ClientQuicDataToResend> push_promise_data_to_resend_;
+  std::unique_ptr< ClientQuicDataToResend> push_promise_data_to_resend_;
 </code>
 </pre>
 <br/>
@@ -147,10 +147,10 @@ CreateQuicClientSession是基类QuicClientBase中的纯虚函数.<br/>
 创建QuicSpdyClientSession类对象，需要输入connection对象等。<br/>
 <pre>
 <code>
-std::unique_ptr<QuicSession> QuicSpdyClientBase::CreateQuicClientSession(
+std::unique_ptr< QuicSession> QuicSpdyClientBase::CreateQuicClientSession(
     const quic::ParsedQuicVersionVector& supported_versions,
     QuicConnection* connection) {
-  return QuicMakeUnique<QuicSpdyClientSession>(
+  return QuicMakeUnique< QuicSpdyClientSession>(
       *config(), supported_versions, connection, server_id(), crypto_config(),
       &push_promise_index_);
 }
@@ -202,9 +202,9 @@ void QuicSpdyClientBase::SendRequestAndWaitForResponse(
 创建一个QuicSpdyClientStream类对象<br/>
 <pre>
 <code>
-std::unique_ptr<QuicSpdyClientStream>
+std::unique_ptr< QuicSpdyClientStream>
 QuicSpdyClientSession::CreateClientStream() {
-  return QuicMakeUnique<QuicSpdyClientStream>(
+  return QuicMakeUnique< QuicSpdyClientStream>(
       GetNextOutgoingBidirectionalStreamId(), this, BIDIRECTIONAL);
 }
 </code>
@@ -224,3 +224,36 @@ QuicClient继承QuicSpdyClientBase<br/>
 在基类QuicClientBase中CreateQuicClientSession是一个纯虚函数<br/>
 
 ### 3. Quic Session相关代码
+* QuicSpdyClientSession <br/>
+class QuicSpdyClientSession : public QuicSpdyClientSessionBase <br/>
+* QuicSpdyClientSessionBase <br/>
+<pre>
+<code>
+  class QUIC_EXPORT_PRIVATE QuicSpdyClientSessionBase
+    : public QuicSpdySession,
+      public QuicCryptoClientStream::ProofHandler
+</code>
+</pre><br/>
+* QuicSpdySession
+<pre>
+<code>
+class QUIC_EXPORT_PRIVATE QuicSpdySession
+    : public QuicSession,
+      public QpackEncoder::DecoderStreamErrorDelegate,
+      public QpackEncoderStreamSender::Delegate,
+      public QpackDecoder::EncoderStreamErrorDelegate,
+      public QpackDecoderStreamSender::Delegate
+</code>
+</pre><br/>
+* QuicSession
+<pre>
+<code>
+class QUIC_EXPORT_PRIVATE QuicSession : public QuicConnectionVisitorInterface,
+                                        public SessionNotifierInterface,
+                                        public QuicStreamFrameDataProducer
+</code>
+</pre><br/>
+
+### 3.1 QuicSpdyClientSessionBase
+#### 3.1.1 类成员变量
+* 
