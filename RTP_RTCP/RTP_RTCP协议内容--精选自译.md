@@ -17,11 +17,20 @@ RTP协议比较简单，因此从第5章节RTCP开始。
 &emsp;&emsp;rtp的数据端口号是偶数，rtcp的端口号为rtp端口号+1。举例，如果媒体数据发送到udp port 5004，那么rtcp就会发送到5005. 所有会话中的参与者都应该发送组合的RTCP报文，相反的，也将接收到其他参与者发送的RTCP组合报文。既然所有的反馈都会在多方会话中被发送给所有参与者:单播就发送给中转服务器，它会中转数据，或者可以直接通过组播。RTCP的点到点性质让每个会话中的参与者都能得到其他参与者的信息: 是否在线、接收质量、个人信息，比如姓名、email、地址和电话号码。
 ## 5.3 RTCP报文格式
 在RTP规范中，定义了5种RTCP报文:
-* RR: 接受者报告, type-201
 * SR: 发送者报告, type-200
-* SDES: source description 源信息报告
+* RR: 接受者报告, type-201
+* SDES: source description 源信息报告, type-202
 * BYE: 成员管理报告, type-203
 * APP: 自定义报告, type-204
+* RTP_Feedback: RTCP Transport Layer Feedback Packet, type-205
+* PS_Feedback: RTCP Payload Specific Feedback Packet, type-206
+<br/>
+RTP fmt:<br/>
+* RTCP_PLI_FMT(1): picture重传, type-206
+* RTCP_SLI_FMT(2): Slice重传, type-206
+* RTCP_FIR_FMT(4): 关键帧重传, type-206
+* RTCP_AFB(15): 带宽估计, type-206
+* RTCP_RTP_FB_NACK_FMT(1): NACK重传, type-205
 
 图5.1描述基本的RTCP格式。
 ![basic rtcp format](https://github.com/runner365/read_book/blob/master/RTP_RTCP/pic/basic_rtcp_packet_format.png)
