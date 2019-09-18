@@ -25,7 +25,7 @@ RTP协议比较简单，因此从第5章节RTCP开始。
 * RTP_Feedback: RTCP Transport Layer Feedback Packet, type-205
 * PS_Feedback: RTCP Payload Specific Feedback Packet, type-206
 <br/>
-RTP fmt:<br/>
+RTP fmt:
 * RTCP_PLI_FMT(1): picture重传, type-206
 * RTCP_SLI_FMT(2): Slice重传, type-206
 * RTCP_FIR_FMT(4): 关键帧重传, type-206
