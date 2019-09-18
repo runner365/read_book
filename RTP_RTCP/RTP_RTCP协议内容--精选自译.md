@@ -32,8 +32,8 @@ RTP fmt:
 * RTCP_FIR_FMT(4): 关键帧重传, type-206 <br/>
 * RTCP_AFB(15):    带宽估计, type-206 <br/>
 * RTCP_RTP_FB_NACK_FMT(1): NACK重传, type-205 <br/>
-
 <br/>
+
 图5.1描述基本的RTCP格式。
 ![basic rtcp format](https://github.com/runner365/read_book/blob/master/RTP_RTCP/pic/basic_rtcp_packet_format.png)
 <br/>
