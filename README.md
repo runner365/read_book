@@ -12,6 +12,12 @@
 - [2 QUIC](#2-quic)
 - [3 RTMP](#3-rtmp)
 
+个人webrtc sfu开源: [runner365/cpp_media_server](https://github.com/runner365/cpp_media_server)
+
+cpp media server是基于c++11开发的webrtc会议服务sfu，并且支持跨平台(linux/mac)。
+
+cpp media server同时支持多种流媒体协议: webrtc/rtmp/httpflv/hls/websocket flv
+
 <!-- /TOC -->
 # 1. webrtc方向
 &emsp;&emsp;webrtc技术栈比较长，内容比较多，如果只是拿一些开源来改改使用，无法真正的入门<br>
